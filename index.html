@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ICFAI SSD - Visitor Desk</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <style>
+    :root {
+      --bg: #e0e5ec;
+      --shadow-light: #ffffff;
+      --shadow-dark: #a3b1c6;
+      --primary: #1a365d;
+      --accent: #2b6cb0;
+    }
+    body {
+      background: var(--bg);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      padding: 30px 15px;
+      margin: 0;
+    }
+    .neu-card {
+      background: var(--bg);
+      border-radius: 24px;
+      box-shadow: 12px 12px 24px var(--shadow-dark), -12px -12px 24px var(--shadow-light);
+      padding: 35px;
+      width: 100%;
+      max-width: 580px;
+    }
+    .header { text-align: center; margin-bottom: 25px; }
+    .header img { max-height: 55px; margin-bottom: 10px; }
+    .tab-container {
+      display: flex;
+      background: var(--bg);
+      border-radius: 15px;
+      padding: 6px;
+      box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+      margin-bottom: 25px;
+    }
+    .tab-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: 600;
+      color: #555;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .tab-btn.active {
+      background: var(--bg);
+      color: var(--accent);
+      box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+    }
+    .neu-input, .neu-select, .neu-textarea {
+      width: 100%;
+      box-sizing: border-box;
+      background: var(--bg);
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 6px;
+      margin-bottom: 18px;
+      box-shadow: inset 4px 4px 7px var(--shadow-dark), inset -4px -4px 7px var(--shadow-light);
+      outline: none;
+      font-size: 14px;
+    }
+    .neu-btn {
+      width: 100%;
+      border: none;
+      padding: 15px;
+      border-radius: 12px;
+      background: var(--bg);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 15px;
+      box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .neu-btn:active {
+      box-shadow: inset 4px 4px 7px var(--shadow-dark), inset -4px -4px 7px var(--shadow-light);
+    }
+    .grid-2 { display: flex; gap: 12px; }
+    .grid-2 > div { flex: 1; }
+  </style>
+</head>
+<body>
+
+<div class="neu-card">
+  <div class="header">
+    <img src="logo.png" alt="ICFAI Foundation for Higher Education" onerror="this.style.display='none'">
+    <h3 style="color:var(--primary); margin: 5px 0;">Student Service Department (SSD)</h3>
+    <p style="color:#666; font-size: 13px; margin:0;">Visitor Enquiry & Check-in Desk</p>
+  </div>
+
+  <div class="tab-container">
+    <button class="tab-btn active" id="tabStudent" onclick="switchTab('student')">Student Enquiry</button>
+    <button class="tab-btn" id="tabFaculty" onclick="switchTab('faculty')">Faculty Enquiry</button>
+  </div>
+
+  <!-- Student Form -->
+  <form id="studentForm">
+    <label>Enrollment Number</label>
+    <input type="text" id="stuEnroll" class="neu-input" placeholder="e.g. 26BSOCBL0001" oninput="lookupStudent()" required>
+
+    <label>Full Name</label>
+    <input type="text" id="stuName" class="neu-input" placeholder="Auto-populated / Editable" required>
+
+    <div class="grid-2">
+      <div>
+        <label>Section</label>
+        <input type="text" id="stuSec" class="neu-input" placeholder="e.g. A">
+      </div>
+      <div>
+        <label>Semester</label>
+        <input type="text" id="stuSem" class="neu-input" placeholder="e.g. 1st Sem">
+      </div>
+    </div>
+
+    <label>Select SSD Staff</label>
+    <select id="stuStaff" class="neu-select" required>
+      <option value="">-- Choose Staff Member --</option>
+      <option value="Person 1">Person 1</option>
+      <option value="Person 2">Person 2</option>
+      <option value="Person 3">Person 3</option>
+      <option value="Person 4">Person 4</option>
+      <option value="Person 5">Person 5</option>
+      <option value="No Staff Available">No Staff Available</option>
+    </select>
+
+    <label>Reason for Visit / Query</label>
+    <textarea id="stuQuery" rows="3" class="neu-textarea" placeholder="State your enquiry briefly..." required></textarea>
+
+    <button type="submit" class="neu-btn">Submit Enquiry</button>
+  </form>
+
+  <!-- Faculty Form -->
+  <form id="facultyForm" style="display:none;">
+    <label>Faculty Name</label>
+    <input type="text" id="facName" list="facList" class="neu-input" placeholder="Type to search faculty name..." required>
+    <datalist id="facList"></datalist>
+
+    <label>Select SSD Staff</label>
+    <select id="facStaff" class="neu-select" required>
+      <option value="">-- Choose Staff Member --</option>
+      <option value="Person 1">Person 1</option>
+      <option value="Person 2">Person 2</option>
+      <option value="Person 3">Person 3</option>
+      <option value="Person 4">Person 4</option>
+      <option value="Person 5">Person 5</option>
+      <option value="No Staff Available">No Staff Available</option>
+    </select>
+
+    <label>Brief Query</label>
+    <textarea id="facQuery" rows="3" class="neu-textarea" placeholder="State your enquiry briefly..." required></textarea>
+
+    <button type="submit" class="neu-btn">Submit Enquiry</button>
+  </form>
+</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDv4W1ZgAC4r8Zo6v65qu0EEy6ea9O1lYk",
+    authDomain: "icfai-ssd-system.firebaseapp.com",
+    projectId: "icfai-ssd-system",
+    storageBucket: "icfai-ssd-system.firebasestorage.app",
+    messagingSenderId: "949638357634",
+    appId: "1:949638357634:web:4956fffd372232f9418a9b"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  let studentMap = {};
+
+  fetch('Combined data Student List CSV.json')
+    .then(res => res.json())
+    .then(data => {
+      data.forEach(item => {
+        if (item.Enrolno) {
+          const key = String(item.Enrolno).trim().toUpperCase();
+          const semNum = item.Semester;
+          const semText = semNum == 1 ? "1st Sem" : (semNum == 3 ? "3rd Sem" : semNum + "th Sem");
+          studentMap[key] = {
+            name: item.Name || '',
+            sec: item["Sem I - Section"] || '',
+            sem: semText
+          };
+        }
+      });
+    })
+    .catch(err => console.error("Error loading students:", err));
+
+  fetch('Faculty List.json')
+    .then(res => res.json())
+    .then(data => {
+      const dl = document.getElementById('facList');
+      data.forEach(item => {
+        const name = (item["Faculty Name (Dr./Prof.)"] || "").trim();
+        if (name && name !== "VF") {
+          const opt = document.createElement('option');
+          opt.value = name;
+          dl.appendChild(opt);
+        }
+      });
+    })
+    .catch(err => console.error("Error loading faculty:", err));
+
+  function switchTab(type) {
+    document.getElementById('studentForm').style.display = type === 'student' ? 'block' : 'none';
+    document.getElementById('facultyForm').style.display = type === 'faculty' ? 'block' : 'none';
+    document.getElementById('tabStudent').classList.toggle('active', type === 'student');
+    document.getElementById('tabFaculty').classList.toggle('active', type === 'faculty');
+  }
+
+  function lookupStudent() {
+    const inputVal = document.getElementById('stuEnroll').value.trim().toUpperCase();
+    if (studentMap[inputVal]) {
+      document.getElementById('stuName').value = studentMap[inputVal].name;
+      document.getElementById('stuSec').value = studentMap[inputVal].sec;
+      document.getElementById('stuSem').value = studentMap[inputVal].sem;
+    }
+  }
+
+  document.getElementById('studentForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await db.collection('enquiries').add({
+      type: 'Student',
+      enrollment: document.getElementById('stuEnroll').value.trim().toUpperCase(),
+      name: document.getElementById('stuName').value.trim(),
+      sec: document.getElementById('stuSec').value.trim(),
+      sem: document.getElementById('stuSem').value.trim(),
+      assignedStaff: document.getElementById('stuStaff').value,
+      query: document.getElementById('stuQuery').value.trim(),
+      status: 'Open',
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    alert('Enquiry submitted successfully!');
+    document.getElementById('studentForm').reset();
+  });
+
+  document.getElementById('facultyForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await db.collection('enquiries').add({
+      type: 'Faculty',
+      name: document.getElementById('facName').value.trim(),
+      assignedStaff: document.getElementById('facStaff').value,
+      query: document.getElementById('facQuery').value.trim(),
+      status: 'Open',
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    alert('Faculty enquiry registered successfully!');
+    document.getElementById('facultyForm').reset();
+  });
+</script>
+</body>
+</html>
