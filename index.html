@@ -99,8 +99,8 @@
   </div>
 
   <div class="tab-container">
-    <button class="tab-btn active" id="tabStudent" onclick="switchTab('student')">Student Enquiry</button>
-    <button class="tab-btn" id="tabFaculty" onclick="switchTab('faculty')">Faculty Enquiry</button>
+    <button class="tab-btn active" id="tabStudent" type="button" onclick="switchTab('student')">Student Enquiry</button>
+    <button class="tab-btn" id="tabFaculty" type="button" onclick="switchTab('faculty')">Faculty Enquiry</button>
   </div>
 
   <!-- Student Form -->
@@ -136,7 +136,7 @@
     <label>Reason for Visit / Query</label>
     <textarea id="stuQuery" rows="3" class="neu-textarea" placeholder="State your enquiry briefly..." required></textarea>
 
-    <button type="submit" class="neu-btn">Submit Enquiry</button>
+    <button type="submit" id="stuSubmitBtn" class="neu-btn">Submit Enquiry</button>
   </form>
 
   <!-- Faculty Form -->
@@ -159,7 +159,7 @@
     <label>Brief Query</label>
     <textarea id="facQuery" rows="3" class="neu-textarea" placeholder="State your enquiry briefly..." required></textarea>
 
-    <button type="submit" class="neu-btn">Submit Enquiry</button>
+    <button type="submit" id="facSubmitBtn" class="neu-btn">Submit Enquiry</button>
   </form>
 </div>
 
@@ -192,8 +192,9 @@
           };
         }
       });
+      console.log("Students loaded successfully. Total:", Object.keys(studentMap).length);
     })
-    .catch(err => console.error("Error loading students:", err));
+    .catch(err => console.error("Error loading students list:", err));
 
   fetch('Faculty List.json')
     .then(res => res.json())
@@ -207,8 +208,9 @@
           dl.appendChild(opt);
         }
       });
+      console.log("Faculty list loaded.");
     })
-    .catch(err => console.error("Error loading faculty:", err));
+    .catch(err => console.error("Error loading faculty list:", err));
 
   function switchTab(type) {
     document.getElementById('studentForm').style.display = type === 'student' ? 'block' : 'none';
@@ -226,9 +228,13 @@
     }
   }
 
-  document.getElementById('studentForm').addEventListener('submit', async (e) => {
+  document.getElementById('studentForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    await db.collection('enquiries').add({
+    const btn = document.getElementById('stuSubmitBtn');
+    btn.disabled = true;
+    btn.innerText = "Submitting...";
+
+    db.collection('enquiries').add({
       type: 'Student',
       enrollment: document.getElementById('stuEnroll').value.trim().toUpperCase(),
       name: document.getElementById('stuName').value.trim(),
@@ -237,24 +243,51 @@
       assignedStaff: document.getElementById('stuStaff').value,
       query: document.getElementById('stuQuery').value.trim(),
       status: 'Open',
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      createdDate: new Date().toISOString()
+    })
+    .then(() => {
+      alert('Enquiry submitted successfully!');
+      document.getElementById('studentForm').reset();
+    })
+    .catch(err => {
+      console.error("Firebase write error:", err);
+      alert("Error saving enquiry: " + err.message);
+    })
+    .finally(() => {
+      btn.disabled = false;
+      btn.innerText = "Submit Enquiry";
     });
-    alert('Enquiry submitted successfully!');
-    document.getElementById('studentForm').reset();
   });
 
-  document.getElementById('facultyForm').addEventListener('submit', async (e) => {
+  document.getElementById('facultyForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    await db.collection('enquiries').add({
+    const btn = document.getElementById('facSubmitBtn');
+    btn.disabled = true;
+    btn.innerText = "Submitting...";
+
+    db.collection('enquiries').add({
       type: 'Faculty',
+      enrollment: 'FACULTY',
       name: document.getElementById('facName').value.trim(),
+      sec: '',
+      sem: '',
       assignedStaff: document.getElementById('facStaff').value,
       query: document.getElementById('facQuery').value.trim(),
       status: 'Open',
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      createdDate: new Date().toISOString()
+    })
+    .then(() => {
+      alert('Faculty enquiry registered successfully!');
+      document.getElementById('facultyForm').reset();
+    })
+    .catch(err => {
+      console.error("Firebase write error:", err);
+      alert("Error saving enquiry: " + err.message);
+    })
+    .finally(() => {
+      btn.disabled = false;
+      btn.innerText = "Submit Enquiry";
     });
-    alert('Faculty enquiry registered successfully!');
-    document.getElementById('facultyForm').reset();
   });
 </script>
 </body>
