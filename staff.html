@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SSD Staff Queue</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <style>
+    body { background: #e0e5ec; font-family: 'Segoe UI', Tahoma, sans-serif; padding: 25px; margin: 0; }
+    .neu-box {
+      background: #e0e5ec; border-radius: 18px;
+      box-shadow: 8px 8px 16px #a3b1c6, -8px -8px 16px #ffffff;
+      padding: 20px; margin-bottom: 20px;
+    }
+    .neu-input {
+      border: none; border-radius: 10px; padding: 12px; background: #e0e5ec;
+      box-shadow: inset 3px 3px 6px #a3b1c6, inset -3px -3px 6px #ffffff;
+      width: 100%; box-sizing: border-box; margin: 8px 0; outline: none;
+    }
+    .neu-btn {
+      border: none; padding: 12px 20px; border-radius: 10px; cursor: pointer;
+      background: #e0e5ec; font-weight: 600;
+      box-shadow: 4px 4px 8px #a3b1c6, -4px -4px 8px #ffffff;
+    }
+    .neu-btn:active { box-shadow: inset 2px 2px 5px #a3b1c6, inset -2px -2px 5px #ffffff; }
+    .ticket-card {
+      background: #e0e5ec; border-radius: 15px; padding: 18px; margin-bottom: 15px;
+      box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
+    }
+  </style>
+</head>
+<body>
+
+<div class="neu-box" style="max-width: 450px; margin: auto;" id="loginBox">
+  <h3 style="color:#1a365d; text-align:center;">Select SSD Staff Profile</h3>
+  <select id="staffSelect" class="neu-input">
+    <option value="">-- Choose Profile --</option>
+    <option value="Person 1">Person 1</option>
+    <option value="Person 2">Person 2</option>
+    <option value="Person 3">Person 3</option>
+    <option value="Person 4">Person 4</option>
+    <option value="Person 5">Person 5</option>
+  </select>
+  <button onclick="loginStaff()" class="neu-btn" style="width: 100%; margin-top: 10px; color:#2b6cb0;">Open Dashboard</button>
+</div>
+
+<div id="deskView" style="display:none; max-width: 850px; margin: auto;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+    <h2 id="staffHeader" style="color:#1a365d;">Staff Dashboard</h2>
+    <button onclick="location.reload()" class="neu-btn">Logout</button>
+  </div>
+  <div id="ticketsContainer"></div>
+</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDv4W1ZgAC4r8Zo6v65qu0EEy6ea9O1lYk",
+    authDomain: "icfai-ssd-system.firebaseapp.com",
+    projectId: "icfai-ssd-system",
+    storageBucket: "icfai-ssd-system.firebasestorage.app",
+    messagingSenderId: "949638357634",
+    appId: "1:949638357634:web:4956fffd372232f9418a9b"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  let activeStaff = '';
+
+  function loginStaff() {
+    activeStaff = document.getElementById('staffSelect').value;
+    if(!activeStaff) return alert('Select staff member');
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('deskView').style.display = 'block';
+    document.getElementById('staffHeader').innerText = "Assigned Queue: " + activeStaff;
+    loadQueue();
+  }
+
+  function loadQueue() {
+    db.collection('enquiries')
+      .where('assignedStaff', 'in', [activeStaff, 'No Staff Available'])
+      .where('status', '==', 'Open')
+      .onSnapshot(snapshot => {
+        const c = document.getElementById('ticketsContainer');
+        c.innerHTML = '';
+        if(snapshot.empty) { 
+          c.innerHTML = '<div class="neu-box"><p>No pending queries at this desk.</p></div>'; 
+          return; 
+        }
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          c.innerHTML += `
+            <div class="ticket-card">
+              <div style="display:flex; justify-content:space-between;">
+                <b>${d.type}: ${d.name}${d.enrollment ? '('+d.enrollment+')' : ''}</b>
+                <span style="color:#c53030; font-weight:600;">Status: Open</span>
+              </div>
+              <p><b>Section/Sem:</b> ${d.sec \vert{}\vert{} 'N/A'} \vert{}${d.sem || 'N/A'}</p>
+              <p style="background:#d9e0ea; padding:10px; border-radius:8px;">${d.query}</p>
+              <label>Resolution Remarks:</label>
+              <textarea id="sol_${doc.id}" class="neu-input" placeholder="Type solution given..."></textarea>
+              <label>Student Email (Optional - for unresolved follow-up):</label>
+              <input type="email" id="mail_${doc.id}" class="neu-input" placeholder="student@icfai.edu">
+              <div style="margin-top:12px; display:flex; gap:10px;">
+                <button class="neu-btn" style="color:green;" onclick="resolveTicket('${doc.id}')">Resolve & Close Ticket</button>
+                <button class="neu-btn" style="color:#c53030;" onclick="keepPending('${doc.id}')">No Solution (Keep Open)</button>
+              </div>
+            </div>
+          `;
+        });
+      });
+  }
+
+  async function resolveTicket(id) {
+    const sol = document.getElementById('sol_' + id).value;
+    await db.collection('enquiries').doc(id).update({
+      status: 'Resolved',
+      solution: sol,
+      resolvedBy: activeStaff,
+      resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    alert('Ticket marked as resolved.');
+  }
+
+  async function keepPending(id) {
+    const mail = document.getElementById('mail_' + id).value;
+    await db.collection('enquiries').doc(id).update({
+      status: 'Open - Pending Action',
+      studentEmail: mail,
+      flaggedBy: activeStaff
+    });
+    alert('Ticket retained as open for follow-up.');
+  }
+</script>
+</body>
+</html>
