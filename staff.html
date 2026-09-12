@@ -7,34 +7,68 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
   <style>
-    body { background: #e0e5ec; font-family: 'Segoe UI', Tahoma, sans-serif; padding: 25px; margin: 0; }
+    :root {
+      --bg: #e0e5ec;
+      --shadow-light: #ffffff;
+      --shadow-dark: #a3b1c6;
+      --primary: #1a365d;
+      --accent: #2b6cb0;
+    }
+    body {
+      background: var(--bg);
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      padding: 25px;
+      margin: 0;
+    }
     .neu-box {
-      background: #e0e5ec; border-radius: 18px;
-      box-shadow: 8px 8px 16px #a3b1c6, -8px -8px 16px #ffffff;
-      padding: 20px; margin-bottom: 20px;
+      background: var(--bg);
+      border-radius: 18px;
+      box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+      padding: 24px;
+      margin-bottom: 20px;
     }
     .neu-input {
-      border: none; border-radius: 10px; padding: 12px; background: #e0e5ec;
-      box-shadow: inset 3px 3px 6px #a3b1c6, inset -3px -3px 6px #ffffff;
-      width: 100%; box-sizing: border-box; margin: 8px 0; outline: none;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      background: var(--bg);
+      box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+      width: 100%;
+      box-sizing: border-box;
+      margin: 8px 0;
+      outline: none;
+      font-size: 14px;
     }
     .neu-btn {
-      border: none; padding: 12px 20px; border-radius: 10px; cursor: pointer;
-      background: #e0e5ec; font-weight: 600;
-      box-shadow: 4px 4px 8px #a3b1c6, -4px -4px 8px #ffffff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: var(--bg);
+      font-weight: 600;
+      color: var(--primary);
+      box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+      transition: 0.2s ease;
     }
-    .neu-btn:active { box-shadow: inset 2px 2px 5px #a3b1c6, inset -2px -2px 5px #ffffff; }
+    .neu-btn:active {
+      box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
+    }
     .ticket-card {
-      background: #e0e5ec; border-radius: 15px; padding: 18px; margin-bottom: 15px;
-      box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
+      background: var(--bg);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
     }
   </style>
 </head>
 <body>
 
-<div class="neu-box" style="max-width: 450px; margin: auto;" id="loginBox">
-  <h3 style="color:#1a365d; text-align:center;">Select SSD Staff Profile</h3>
-  <select id="staffSelect" class="neu-input">
+<!-- Login / Profile Selection Screen -->
+<div class="neu-box" style="max-width: 450px; margin: 40px auto;" id="loginBox">
+  <h3 style="color:var(--primary); text-align:center; margin-top:0;">SSD Staff Login</h3>
+  <label style="font-size:14px; color:#555;">Choose your profile to see assigned students:</label>
+  <select id="staffSelect" class="neu-input" style="margin-top:10px;">
     <option value="">-- Choose Profile --</option>
     <option value="Person 1">Person 1</option>
     <option value="Person 2">Person 2</option>
@@ -42,13 +76,14 @@
     <option value="Person 4">Person 4</option>
     <option value="Person 5">Person 5</option>
   </select>
-  <button onclick="loginStaff()" class="neu-btn" style="width: 100%; margin-top: 10px; color:#2b6cb0;">Open Dashboard</button>
+  <button onclick="loginStaff()" type="button" class="neu-btn" style="width: 100%; margin-top: 15px; color:var(--accent);">Open Desk Queue</button>
 </div>
 
+<!-- Desk View Screen -->
 <div id="deskView" style="display:none; max-width: 850px; margin: auto;">
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-    <h2 id="staffHeader" style="color:#1a365d;">Staff Dashboard</h2>
-    <button onclick="location.reload()" class="neu-btn">Logout</button>
+    <h2 id="staffHeader" style="color:var(--primary); margin:0;">Staff Dashboard</h2>
+    <button onclick="location.reload()" type="button" class="neu-btn">Switch User</button>
   </div>
   <div id="ticketsContainer"></div>
 </div>
@@ -69,7 +104,10 @@
 
   function loginStaff() {
     activeStaff = document.getElementById('staffSelect').value;
-    if(!activeStaff) return alert('Select staff member');
+    if (!activeStaff) {
+      alert('Please select your staff profile name from the dropdown.');
+      return;
+    }
     document.getElementById('loginBox').style.display = 'none';
     document.getElementById('deskView').style.display = 'block';
     document.getElementById('staffHeader').innerText = "Assigned Queue: " + activeStaff;
@@ -77,59 +115,85 @@
   }
 
   function loadQueue() {
-    db.collection('enquiries')
-      .where('assignedStaff', 'in', [activeStaff, 'No Staff Available'])
-      .where('status', '==', 'Open')
-      .onSnapshot(snapshot => {
-        const c = document.getElementById('ticketsContainer');
-        c.innerHTML = '';
-        if(snapshot.empty) { 
-          c.innerHTML = '<div class="neu-box"><p>No pending queries at this desk.</p></div>'; 
-          return; 
-        }
-        snapshot.forEach(doc => {
-          const d = doc.data();
-          c.innerHTML += `
+    // Listens in real time without triggering Firestore index errors
+    db.collection('enquiries').onSnapshot(function(snapshot) {
+      const container = document.getElementById('ticketsContainer');
+      container.innerHTML = '';
+      let activeCount = 0;
+
+      snapshot.forEach(function(doc) {
+        const d = doc.data();
+        const id = doc.id;
+        
+        // Filter in browser memory for instant display
+        const isAssigned = (d.assignedStaff === activeStaff || d.assignedStaff === 'No Staff Available');
+        const isOpen = (d.status === 'Open' || d.status === 'Open - Pending Action');
+
+        if (isAssigned && isOpen) {
+          activeCount++;
+          const secSem = (d.sec || d.sem) ? `${d.sec || ''} | ${d.sem || ''}` : 'Faculty Inquiry';
+          const enroll = d.enrollment && d.enrollment !== 'FACULTY' ? `(${d.enrollment})` : '';
+
+          container.innerHTML += `
             <div class="ticket-card">
-              <div style="display:flex; justify-content:space-between;">
-                <b>${d.type}: ${d.name}${d.enrollment ? '('+d.enrollment+')' : ''}</b>
-                <span style="color:#c53030; font-weight:600;">Status: Open</span>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <b style="color:var(--primary); font-size:16px;">${d.type}: ${d.name} ${enroll}</b>
+                <span style="color:#c53030; font-weight:700; font-size:13px; background:#ffd8d8; padding:3px 8px; border-radius:6px;">Status: ${d.status}</span>
               </div>
-              <p><b>Section/Sem:</b> ${d.sec \vert{}\vert{} 'N/A'} \vert{}${d.sem || 'N/A'}</p>
-              <p style="background:#d9e0ea; padding:10px; border-radius:8px;">${d.query}</p>
-              <label>Resolution Remarks:</label>
-              <textarea id="sol_${doc.id}" class="neu-input" placeholder="Type solution given..."></textarea>
-              <label>Student Email (Optional - for unresolved follow-up):</label>
-              <input type="email" id="mail_${doc.id}" class="neu-input" placeholder="student@icfai.edu">
-              <div style="margin-top:12px; display:flex; gap:10px;">
-                <button class="neu-btn" style="color:green;" onclick="resolveTicket('${doc.id}')">Resolve & Close Ticket</button>
-                <button class="neu-btn" style="color:#c53030;" onclick="keepPending('${doc.id}')">No Solution (Keep Open)</button>
+              <p style="margin: 8px 0; font-size:13px; color:#555;"><b>Details:</b> ${secSem}</p>
+              <div style="background:#d9e0ea; padding:12px; border-radius:8px; margin: 10px 0; font-size:14px; color:#222;">
+                <b>Query:</b> ${d.query}
+              </div>
+              <label style="font-size:13px; font-weight:600; color:#444;">Resolution / Solution remarks:</label>
+              <textarea id="sol_${id}" class="neu-input" rows="2" placeholder="State solution given..."></textarea>
+              
+              <label style="font-size:13px; font-weight:600; color:#444;">Student Email (Optional):</label>
+              <input type="email" id="mail_${id}" class="neu-input" value="${d.studentEmail || ''}" placeholder="student@icfai.edu">
+
+              <div style="margin-top:14px; display:flex; gap:12px;">
+                <button class="neu-btn" style="color:green; flex:1;" type="button" onclick="resolveTicket('${id}')">Resolve & Close Ticket</button>
+                <button class="neu-btn" style="color:#c53030; flex:1;" type="button" onclick="keepPending('${id}')">No Solution (Keep Open)</button>
               </div>
             </div>
           `;
-        });
+        }
       });
+
+      if (activeCount === 0) {
+        container.innerHTML = '<div class="neu-box" style="text-align:center;"><p style="color:#666; margin:0;">No pending enquiries for this desk right now.</p></div>';
+      }
+    }, function(error) {
+      console.error("Realtime listener error:", error);
+      alert("Error loading queue: " + error.message);
+    });
   }
 
-  async function resolveTicket(id) {
-    const sol = document.getElementById('sol_' + id).value;
-    await db.collection('enquiries').doc(id).update({
+  function resolveTicket(id) {
+    const sol = document.getElementById('sol_' + id).value.trim();
+    if (!sol) {
+      if (!confirm("No remarks entered. Are you sure you want to mark this query resolved?")) return;
+    }
+
+    db.collection('enquiries').doc(id).update({
       status: 'Resolved',
       solution: sol,
       resolvedBy: activeStaff,
-      resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    alert('Ticket marked as resolved.');
+      resolvedDate: new Date().toISOString()
+    })
+    .then(() => alert("Ticket marked as Resolved and closed."))
+    .catch(err => alert("Error: " + err.message));
   }
 
-  async function keepPending(id) {
-    const mail = document.getElementById('mail_' + id).value;
-    await db.collection('enquiries').doc(id).update({
+  function keepPending(id) {
+    const mail = document.getElementById('mail_' + id).value.trim();
+    db.collection('enquiries').doc(id).update({
       status: 'Open - Pending Action',
       studentEmail: mail,
-      flaggedBy: activeStaff
-    });
-    alert('Ticket retained as open for follow-up.');
+      flaggedBy: activeStaff,
+      flaggedDate: new Date().toISOString()
+    })
+    .then(() => alert("Ticket recorded as Open - Pending Action."))
+    .catch(err => alert("Error: " + err.message));
   }
 </script>
 </body>
