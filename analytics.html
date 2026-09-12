@@ -7,41 +7,98 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
   <style>
-    body { background: #e0e5ec; font-family: 'Segoe UI', Tahoma, sans-serif; padding: 25px; margin: 0; }
+    :root {
+      --bg: #e0e5ec;
+      --shadow-light: #ffffff;
+      --shadow-dark: #a3b1c6;
+      --primary: #1a365d;
+    }
+    body {
+      background: var(--bg);
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      padding: 25px;
+      margin: 0;
+    }
     .card {
-      background: #e0e5ec; border-radius: 16px; padding: 20px;
-      box-shadow: 6px 6px 12px #a3b1c6, -6px -6px 12px #ffffff;
+      background: var(--bg);
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
       margin-bottom: 20px;
     }
-    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
-    .stat-val { font-size: 26px; font-weight: bold; color: #1a365d; margin-top: 5px; }
-    .neu-btn {
-      border: none; padding: 12px 20px; border-radius: 10px; cursor: pointer;
-      background: #e0e5ec; font-weight: 600; color: #1a365d;
-      box-shadow: 4px 4px 8px #a3b1c6, -4px -4px 8px #ffffff;
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
     }
-    .neu-btn:active { box-shadow: inset 2px 2px 5px #a3b1c6, inset -2px -2px 5px #ffffff; }
+    .stat-val {
+      font-size: 30px;
+      font-weight: bold;
+      color: var(--primary);
+      margin-top: 8px;
+    }
+    .neu-btn {
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: var(--bg);
+      font-weight: 600;
+      color: var(--primary);
+      box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+      transition: 0.2s ease;
+    }
+    .neu-btn:active {
+      box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
+    }
+    .tag {
+      background: #d9e0ea;
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light);
+    }
   </style>
 </head>
 <body>
 
 <div style="max-width: 1000px; margin: auto;">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-    <h2 style="color:#1a365d;">SSD Analytics & Overview</h2>
-    <button class="neu-btn" onclick="exportWeeklyCSV()">Download Weekly Report (CSV)</button>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
+    <div>
+      <h2 style="color:var(--primary); margin:0;">SSD Master Analytics Dashboard</h2>
+      <p style="color:#666; font-size:13px; margin:4px 0 0 0;">Real-time intelligence on student and faculty queries</p>
+    </div>
+    <button class="neu-btn" type="button" onclick="exportWeeklyCSV()">Download Report (CSV)</button>
   </div>
 
   <div class="metrics">
-    <div class="card">Total Enquiries<div class="stat-val" id="totalCount">0</div></div>
-    <div class="card">Resolved<div class="stat-val" id="resolvedCount" style="color:green;">0</div></div>
-    <div class="card">Pending / Open<div class="stat-val" id="pendingCount" style="color:#c53030;">0</div></div>
-    <div class="card">Efficiency<div class="stat-val" id="effRate">0%</div></div>
+    <div class="card">
+      <span style="font-size:13px; font-weight:600; color:#555;">TOTAL ENQUIRIES</span>
+      <div class="stat-val" id="totalCount">0</div>
+    </div>
+    <div class="card">
+      <span style="font-size:13px; font-weight:600; color:#555;">RESOLVED</span>
+      <div class="stat-val" id="resolvedCount" style="color:green;">0</div>
+    </div>
+    <div class="card">
+      <span style="font-size:13px; font-weight:600; color:#555;">PENDING / OPEN</span>
+      <div class="stat-val" id="pendingCount" style="color:#c53030;">0</div>
+    </div>
+    <div class="card">
+      <span style="font-size:13px; font-weight:600; color:#555;">EFFICIENCY RATE</span>
+      <div class="stat-val" id="effRate">0%</div>
+    </div>
   </div>
 
   <div class="card">
-    <h3 style="color:#1a365d;">Top Query Keywords (Text Analysis)</h3>
-    <p style="font-size:13px; color:#666;">Automatically extracted recurring keywords from student & faculty visit reasons:</p>
-    <div id="keywordCloud" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+    <h3 style="color:var(--primary); margin-top:0;">Recurring Issue Keywords (Text Analysis)</h3>
+    <p style="font-size:13px; color:#666; margin-bottom:15px;">
+      Automatically extracted recurring patterns from visits:
+    </p>
+    <div id="keywordCloud" style="display:flex; flex-wrap:wrap; gap:10px;">
+      <span style="color:#777; font-size:13px;">No enquiry text data collected yet.</span>
+    </div>
   </div>
 </div>
 
@@ -57,53 +114,75 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  let allData = [];
+  let allRecords = [];
 
-  db.collection('enquiries').onSnapshot(snap => {
-    allData = [];
+  db.collection('enquiries').onSnapshot(function(snapshot) {
+    allRecords = [];
     let resolved = 0;
-    let open = 0;
-    let queryWords = {};
+    let pending = 0;
+    let stopWords = ["this", "that", "have", "from", "with", "what", "some", "please", "regarding", "about", "want", "need", "issue", "sir", "madam", "help", "there"];
+    let wordCounts = {};
 
-    snap.forEach(doc => {
+    snapshot.forEach(function(doc) {
       const d = doc.data();
-      allData.push(d);
-      if(d.status === 'Resolved') resolved++;
-      else open++;
+      allRecords.push(d);
 
-      if(d.query) {
-        d.query.toLowerCase().replace(/[^a-zA-Z ]/g, "").split(/\s+/).forEach(w => {
-          if(w.length > 3 && !['this', 'that', 'have', 'from', 'with', 'what', 'some', 'please', 'regarding'].includes(w)) {
-            queryWords[w] = (queryWords[w] || 0) + 1;
+      if (d.status === 'Resolved') {
+        resolved++;
+      } else {
+        pending++;
+      }
+
+      if (d.query) {
+        const cleanWords = d.query.toLowerCase().replace(/[^a-zA-Z ]/g, " ").split(/\s+/);
+        cleanWords.forEach(function(w) {
+          if (w.length > 3 && !stopWords.includes(w)) {
+            wordCounts[w] = (wordCounts[w] || 0) + 1;
           }
         });
       }
     });
 
-    document.getElementById('totalCount').innerText = allData.length;
+    document.getElementById('totalCount').innerText = allRecords.length;
     document.getElementById('resolvedCount').innerText = resolved;
-    document.getElementById('pendingCount').innerText = open;
-    document.getElementById('effRate').innerText = allData.length ? Math.round((resolved / allData.length) * 100) + '%' : '0%';
+    document.getElementById('pendingCount').innerText = pending;
+    
+    if (allRecords.length > 0) {
+      document.getElementById('effRate').innerText = Math.round((resolved / allRecords.length) * 100) + "%";
+    } else {
+      document.getElementById('effRate').innerText = "0%";
+    }
 
-    const kwContainer = document.getElementById('keywordCloud');
-    kwContainer.innerHTML = '';
-    const sortedWords = Object.entries(queryWords).sort((a,b) => b[1] - a[1]).slice(0, 20);
-    sortedWords.forEach(([w, count]) => {
-      kwContainer.innerHTML += `<span style="background:#d9e0ea; padding:6px 12px; border-radius:15px; font-size:13px;"><b>${w}</b> (${count})</span>`;
-    });
+    const cloud = document.getElementById('keywordCloud');
+    cloud.innerHTML = '';
+    const sorted = Object.entries(wordCounts).sort((a, b) => b[1] - a[1]).slice(0, 20);
+
+    if (sorted.length === 0) {
+      cloud.innerHTML = '<span style="color:#777; font-size:13px;">No keyword patterns identified yet.</span>';
+    } else {
+      sorted.forEach(function([word, count]) {
+        cloud.innerHTML += `<span class="tag"><b>${word}</b> &nbsp;<span style="color:#2b6cb0;">${count}</span></span>`;
+      });
+    }
+  }, function(error) {
+    console.error("Analytics listener error:", error);
   });
 
   function exportWeeklyCSV() {
-    let csv = "Type,Name,Enrollment,Query,Staff,Status\n";
-    allData.forEach(r => {
-      csv += `"${r.type}","${r.name || ''}","${r.enrollment \vert{}\vert{} ''}","${(r.query||'').replace(/"/g, '""')}","${r.assignedStaff \vert{}\vert{} ''}","${r.status || ''}"\n`;
+    if (allRecords.length === 0) {
+      alert("No records to export yet.");
+      return;
+    }
+    let csv = "Type,Name,Enrollment,Section,Semester,Assigned Staff,Query,Solution Remarks,Status,Date\n";
+    allRecords.forEach(function(r) {
+      csv += `"${r.type || ''}","${r.name || ''}","${r.enrollment || ''}","${r.sec || ''}","${r.sem || ''}","${r.assignedStaff || ''}","${(r.query || '').replace(/"/g, '""')}","${(r.solution || '').replace(/"/g, '""')}","${r.status || ''}","${r.createdDate || ''}"\n`;
     });
+
     const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `SSD_Report_${new Date().toISOString().slice(0,10)}.csv`;
-    a.click();
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = `SSD_Master_Report_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
   }
 </script>
 </body>
