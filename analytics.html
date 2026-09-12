@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SSD Head - Analytics & Reports</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <style>
+    body { background: #e0e5ec; font-family: 'Segoe UI', Tahoma, sans-serif; padding: 25px; margin: 0; }
+    .card {
+      background: #e0e5ec; border-radius: 16px; padding: 20px;
+      box-shadow: 6px 6px 12px #a3b1c6, -6px -6px 12px #ffffff;
+      margin-bottom: 20px;
+    }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+    .stat-val { font-size: 26px; font-weight: bold; color: #1a365d; margin-top: 5px; }
+    .neu-btn {
+      border: none; padding: 12px 20px; border-radius: 10px; cursor: pointer;
+      background: #e0e5ec; font-weight: 600; color: #1a365d;
+      box-shadow: 4px 4px 8px #a3b1c6, -4px -4px 8px #ffffff;
+    }
+    .neu-btn:active { box-shadow: inset 2px 2px 5px #a3b1c6, inset -2px -2px 5px #ffffff; }
+  </style>
+</head>
+<body>
+
+<div style="max-width: 1000px; margin: auto;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+    <h2 style="color:#1a365d;">SSD Analytics & Overview</h2>
+    <button class="neu-btn" onclick="exportWeeklyCSV()">Download Weekly Report (CSV)</button>
+  </div>
+
+  <div class="metrics">
+    <div class="card">Total Enquiries<div class="stat-val" id="totalCount">0</div></div>
+    <div class="card">Resolved<div class="stat-val" id="resolvedCount" style="color:green;">0</div></div>
+    <div class="card">Pending / Open<div class="stat-val" id="pendingCount" style="color:#c53030;">0</div></div>
+    <div class="card">Efficiency<div class="stat-val" id="effRate">0%</div></div>
+  </div>
+
+  <div class="card">
+    <h3 style="color:#1a365d;">Top Query Keywords (Text Analysis)</h3>
+    <p style="font-size:13px; color:#666;">Automatically extracted recurring keywords from student & faculty visit reasons:</p>
+    <div id="keywordCloud" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+  </div>
+</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDv4W1ZgAC4r8Zo6v65qu0EEy6ea9O1lYk",
+    authDomain: "icfai-ssd-system.firebaseapp.com",
+    projectId: "icfai-ssd-system",
+    storageBucket: "icfai-ssd-system.firebasestorage.app",
+    messagingSenderId: "949638357634",
+    appId: "1:949638357634:web:4956fffd372232f9418a9b"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  let allData = [];
+
+  db.collection('enquiries').onSnapshot(snap => {
+    allData = [];
+    let resolved = 0;
+    let open = 0;
+    let queryWords = {};
+
+    snap.forEach(doc => {
+      const d = doc.data();
+      allData.push(d);
+      if(d.status === 'Resolved') resolved++;
+      else open++;
+
+      if(d.query) {
+        d.query.toLowerCase().replace(/[^a-zA-Z ]/g, "").split(/\s+/).forEach(w => {
+          if(w.length > 3 && !['this', 'that', 'have', 'from', 'with', 'what', 'some', 'please', 'regarding'].includes(w)) {
+            queryWords[w] = (queryWords[w] || 0) + 1;
+          }
+        });
+      }
+    });
+
+    document.getElementById('totalCount').innerText = allData.length;
+    document.getElementById('resolvedCount').innerText = resolved;
+    document.getElementById('pendingCount').innerText = open;
+    document.getElementById('effRate').innerText = allData.length ? Math.round((resolved / allData.length) * 100) + '%' : '0%';
+
+    const kwContainer = document.getElementById('keywordCloud');
+    kwContainer.innerHTML = '';
+    const sortedWords = Object.entries(queryWords).sort((a,b) => b[1] - a[1]).slice(0, 20);
+    sortedWords.forEach(([w, count]) => {
+      kwContainer.innerHTML += `<span style="background:#d9e0ea; padding:6px 12px; border-radius:15px; font-size:13px;"><b>${w}</b> (${count})</span>`;
+    });
+  });
+
+  function exportWeeklyCSV() {
+    let csv = "Type,Name,Enrollment,Query,Staff,Status\n";
+    allData.forEach(r => {
+      csv += `"${r.type}","${r.name || ''}","${r.enrollment \vert{}\vert{} ''}","${(r.query||'').replace(/"/g, '""')}","${r.assignedStaff \vert{}\vert{} ''}","${r.status || ''}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `SSD_Report_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+  }
+</script>
+</body>
+</html>
