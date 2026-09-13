@@ -15,6 +15,7 @@
       --accent: #2563eb;
       --crimson: #dc2626;
       --green: #16a34a;
+      --amber: #d97706;
       --text: #1e293b;
       --subtext: #64748b;
     }
@@ -57,9 +58,13 @@
       font-size: 14px;
       color: var(--primary);
       transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
     .neu-btn:hover { box-shadow: 6px 6px 14px var(--dark-shadow), -6px -6px 14px var(--light-shadow); }
     .neu-btn:active { box-shadow: inset 3px 3px 6px var(--dark-shadow), inset -3px -3px 6px var(--light-shadow); }
+    
     .kpi-row {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -75,6 +80,7 @@
     }
     .kpi-card .label { font-size: 12px; font-weight: 700; color: var(--subtext); }
     .kpi-card .val { font-size: 30px; font-weight: 800; margin-top: 6px; color: var(--primary); }
+    
     .tab-bar {
       display: flex;
       gap: 15px;
@@ -106,6 +112,7 @@
       color: var(--primary);
       box-shadow: 4px 4px 10px var(--dark-shadow), -4px -4px 10px var(--light-shadow);
     }
+    
     @keyframes steadyGlowPulse {
       0% { box-shadow: 0 0 4px rgba(220, 38, 38, 0.3); background: #fee2e2; }
       50% { box-shadow: 0 0 16px rgba(220, 38, 38, 0.7); background: #fecaca; }
@@ -125,10 +132,32 @@
       box-shadow: 5px 5px 12px var(--dark-shadow), -5px -5px 12px var(--light-shadow);
       border-left: 5px solid var(--accent);
     }
+
+    /* Status Modal Overlay */
+    #statusModal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .status-badge {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 10px;
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
 
+<!-- Login / Profile Selection Screen -->
 <div class="neu-card" id="loginBox" style="max-width: 440px; margin: 60px auto; text-align: center;">
   <h2 style="color:var(--primary); margin-bottom: 8px;">SSD Staff Portal</h2>
   <p style="color:var(--subtext); font-size:14px; margin-top:0;">Select your desk profile</p>
@@ -142,13 +171,26 @@
   </button>
 </div>
 
+<!-- Main Desk Interface -->
 <div id="deskView" style="display:none; max-width: 1000px; margin: auto;">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
+  
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px; flex-wrap:wrap; gap:12px;">
     <div>
-      <h2 id="staffHeader" style="color:var(--primary); margin:0;">Staff Dashboard</h2>
-      <span style="font-size: 13px; color:var(--subtext);">Real-time Sync Active</span>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <h2 id="staffHeader" style="color:var(--primary); margin:0;">Staff Dashboard</h2>
+        <span id="currentStatusBadge" class="status-badge" style="background:#dcfce7; color:var(--green);">Available</span>
+      </div>
+      <span style="font-size: 13px; color:var(--subtext);">Live Cloud Queue Connected</span>
     </div>
-    <button onclick="location.reload()" type="button" class="neu-btn">Switch User</button>
+
+    <div style="display:flex; gap:10px;">
+      <button onclick="openStatusModal()" type="button" class="neu-btn" title="Desk Availability Settings">
+        ⚙ Settings
+      </button>
+      <button onclick="location.reload()" type="button" class="neu-btn">
+        Switch User
+      </button>
+    </div>
   </div>
 
   <div class="kpi-row">
@@ -196,6 +238,30 @@
       <p style="color:#94a3b8; text-align:center; padding:30px 0;">No pending faculty enquiries.</p>
     </div>
   </div>
+
+</div>
+
+<!-- Staff Availability Settings Modal -->
+<div id="statusModal">
+  <div class="neu-card" style="max-width: 420px; width: 100%;">
+    <h3 style="color:var(--primary); margin-top:0;">Desk Availability Settings</h3>
+    <p style="font-size:13px; color:var(--subtext); margin-bottom:15px;">
+      Set your current work status. When unavailable, students are prompted to wait or meet another staff member.
+    </p>
+
+    <label style="font-size:13px; font-weight:600;">Current State:</label>
+    <select id="modalStatusSelect" class="neu-inset" style="margin-top:8px;">
+      <option value="Available">Available (Accepting Enquiries)</option>
+      <option value="Lunch Break">Lunch Break</option>
+      <option value="In Meeting">In Meeting</option>
+      <option value="On Leave">On Leave</option>
+    </select>
+
+    <div style="display:flex; gap:10px; margin-top:18px;">
+      <button onclick="saveMyAvailability()" type="button" class="neu-btn" style="flex:1; color:var(--accent);">Save Status</button>
+      <button onclick="closeStatusModal()" type="button" class="neu-btn" style="flex:1;">Cancel</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -212,7 +278,6 @@
 
   let activeStaff = '';
 
-  // Synchronize Staff Login Dropdown directly with Firestore Settings
   db.collection('settings').doc('staffList').onSnapshot(doc => {
     const staffList = (doc.exists && doc.data().names) ? doc.data().names : ["Person 1", "Person 2", "Person 3", "Person 4", "Person 5"];
     const sel = document.getElementById('staffSelect');
@@ -225,13 +290,53 @@
     });
   });
 
+  // Track availability state of this staff member
+  db.collection('settings').doc('staffAvailability').onSnapshot(doc => {
+    if (doc.exists && activeStaff) {
+      const state = (doc.data() && doc.data()[activeStaff]) || 'Available';
+      updateStatusBadge(state);
+    }
+  });
+
+  function updateStatusBadge(state) {
+    const badge = document.getElementById('currentStatusBadge');
+    badge.innerText = state;
+    if (state === 'Available') {
+      badge.style.background = '#dcfce7'; badge.style.color = 'var(--green)';
+    } else if (state === 'Lunch Break' || state === 'In Meeting') {
+      badge.style.background = '#fef3c7'; badge.style.color = 'var(--amber)';
+    } else {
+      badge.style.background = '#fee2e2'; badge.style.color = 'var(--crimson)';
+    }
+  }
+
   function loginStaff() {
     activeStaff = document.getElementById('staffSelect').value;
     if (!activeStaff) return alert('Select staff profile');
     document.getElementById('loginBox').style.display = 'none';
     document.getElementById('deskView').style.display = 'block';
     document.getElementById('staffHeader').innerText = "Workstation: " + activeStaff;
+
+    db.collection('settings').doc('staffAvailability').get().then(doc => {
+      const state = (doc.exists && doc.data()[activeStaff]) || 'Available';
+      updateStatusBadge(state);
+      document.getElementById('modalStatusSelect').value = state;
+    });
+
     listenToQueue();
+  }
+
+  function openStatusModal() { document.getElementById('statusModal').style.display = 'flex'; }
+  function closeStatusModal() { document.getElementById('statusModal').style.display = 'none'; }
+
+  function saveMyAvailability() {
+    const selectedState = document.getElementById('modalStatusSelect').value;
+    db.collection('settings').doc('staffAvailability').set({
+      [activeStaff]: selectedState
+    }, { merge: true }).then(() => {
+      updateStatusBadge(selectedState);
+      closeStatusModal();
+    });
   }
 
   function switchDeskTab(tab) {
@@ -327,7 +432,7 @@
       status: 'Open - Pending Action',
       flaggedBy: activeStaff,
       flaggedDate: new Date().toISOString()
-    }).then(() => alert("Ticket recorded as Open - Pending Action."));
+    }).then(() => alert("Ticket marked as Open - Pending Action."));
   }
 </script>
 </body>
