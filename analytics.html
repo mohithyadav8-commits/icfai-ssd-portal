@@ -209,12 +209,12 @@
     <!-- Realtime Notice Broadcast -->
     <div class="neu-card">
       <h3 style="color:var(--primary); margin-top:0;">Entrance Desk Announcement Widget</h3>
-      <p style="font-size:13px; color:var(--subtext);">Display an immediate notice pinned to the visitor desk in real time.</p>
+      <p style="font-size:13px; color:var(--subtext);">Notice displayed exclusively on the student visit screen.</p>
       
       <div class="grid-2">
         <div>
           <label style="font-size:13px; font-weight:600;">Notice Headline</label>
-          <input type="text" id="noticeTitleInput" class="neu-inset" placeholder="e.g. Lunch Break Update">
+          <input type="text" id="noticeTitleInput" class="neu-inset" placeholder="e.g. Lunch Break Notice">
         </div>
         <div>
           <label style="font-size:13px; font-weight:600;">Status</label>
@@ -235,7 +235,7 @@
     <!-- Staff Identity Configuration -->
     <div class="neu-card">
       <h3 style="color:var(--primary); margin-top:0;">SSD Staff Profile Management</h3>
-      <p style="font-size:13px; color:var(--subtext);">Add or remove staff desks. Synchronizes immediately with all terminals.</p>
+      <p style="font-size:13px; color:var(--subtext);">Add or remove staff desks. Synchronizes immediately across all terminals.</p>
 
       <div style="display:flex; gap:12px; margin-bottom:18px;">
         <input type="text" id="newStaffInput" class="neu-inset" placeholder="Staff Name (e.g. Person 6 or Dr. Sharma)">
@@ -246,26 +246,24 @@
       <div id="staffChipContainer" style="margin-top:10px;"></div>
     </div>
 
-    <!-- Active Student Directory Explorer & Purge Tool -->
+    <!-- Student Master Directory Explorer -->
     <div class="neu-card">
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
         <div>
           <h3 style="color:var(--primary); margin:0;">Student Master Directory Explorer</h3>
           <p style="font-size:13px; color:var(--subtext); margin:4px 0 0 0;">Inspect current student records in memory or clear the batch.</p>
         </div>
-        <div style="display:flex; gap:10px;">
-          <button class="neu-btn" type="button" onclick="deleteStudentDirectory()" style="color:var(--crimson);">
-            Delete Current Student List
-          </button>
-        </div>
+        <button class="neu-btn" type="button" onclick="deleteStudentDirectory()" style="color:var(--crimson);">
+          Delete Current Student List
+        </button>
       </div>
 
       <div style="display:flex; justify-content:space-between; align-items:center; margin:16px 0 10px 0;">
-        <span style="font-size:13px; font-weight:700;">Total Active Records: <span id="studentCountBadge" style="color:var(--accent);">0</span></span>
-        <input type="text" id="studentSearchInput" oninput="filterStudentTable()" placeholder="Search student name or enroll no..." class="neu-inset" style="max-width:280px; padding:8px 12px;">
+        <span style="font-size:13px; font-weight:700;">Active Enrolled Students: <span id="studentCountBadge" style="color:var(--accent);">0</span></span>
+        <input type="text" id="studentSearchInput" oninput="filterStudentTable()" placeholder="Search student name or enrollment..." class="neu-inset" style="max-width:280px; padding:8px 12px;">
       </div>
 
-      <div style="max-height: 260px; overflow-y:auto; border: 1px solid #cbd5e1; border-radius:12px;">
+      <div style="max-height: 240px; overflow-y:auto; border: 1px solid #cbd5e1; border-radius:12px;">
         <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:left;">
           <thead style="background:#f1f5f9; position:sticky; top:0;">
             <tr style="border-bottom: 2px solid #cbd5e1; color:var(--subtext);">
@@ -282,11 +280,44 @@
       </div>
     </div>
 
+    <!-- Faculty Master Directory Explorer -->
+    <div class="neu-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div>
+          <h3 style="color:var(--primary); margin:0;">Faculty Master Directory Explorer</h3>
+          <p style="font-size:13px; color:var(--subtext); margin:4px 0 0 0;">Inspect active faculty members or clear directory.</p>
+        </div>
+        <button class="neu-btn" type="button" onclick="deleteFacultyDirectory()" style="color:var(--crimson);">
+          Delete Current Faculty List
+        </button>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin:16px 0 10px 0;">
+        <span style="font-size:13px; font-weight:700;">Active Faculty Profiles: <span id="facultyCountBadge" style="color:var(--crimson);">0</span></span>
+        <input type="text" id="facultySearchInput" oninput="filterFacultyTable()" placeholder="Search faculty name..." class="neu-inset" style="max-width:280px; padding:8px 12px;">
+      </div>
+
+      <div style="max-height: 240px; overflow-y:auto; border: 1px solid #cbd5e1; border-radius:12px;">
+        <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:left;">
+          <thead style="background:#f1f5f9; position:sticky; top:0;">
+            <tr style="border-bottom: 2px solid #cbd5e1; color:var(--subtext);">
+              <th style="padding:8px 12px;">#</th>
+              <th style="padding:8px 12px;">Faculty Name</th>
+              <th style="padding:8px 12px; text-align:right;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="facultyTableBody">
+            <tr><td colspan="3" style="padding:15px; text-align:center; color:#94a3b8;">Loading faculty records...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- Bulk CSV Directory Upload -->
     <div class="neu-card">
-      <h3 style="color:var(--primary); margin-top:0;">Upload New Batch (Raw CSV)</h3>
+      <h3 style="color:var(--primary); margin-top:0;">Upload New Directory Batch (Raw CSV)</h3>
       <p style="font-size:13px; color:var(--subtext); line-height:1.5;">
-        Upload standard Excel CSV files. Processed in-browser and synced directly to front desks.
+        Upload standard Excel CSV files. Processed directly in the browser.
       </p>
 
       <div class="grid-2">
@@ -294,14 +325,14 @@
           <h4 style="margin:0 0 10px 0; color:var(--accent);">Upload Student CSV</h4>
           <p style="font-size:12px; color:var(--subtext); margin-bottom:12px;">Columns: <code>Enrolno</code>, <code>Name</code>, <code>Sec</code>, <code>Semester</code></p>
           <input type="file" id="studentCSVInput" accept=".csv" class="neu-inset">
-          <button class="neu-btn" type="button" onclick="processStudentCSV()" style="margin-top:12px; width:100%;">Upload & Update Students</button>
+          <button class="neu-btn" type="button" onclick="processStudentCSV()" style="margin-top:12px; width:100%;">Upload & Sync Students</button>
         </div>
 
         <div style="background:#f8fafc; padding:18px; border-radius:14px;">
           <h4 style="margin:0 0 10px 0; color:var(--crimson);">Upload Faculty CSV</h4>
           <p style="font-size:12px; color:var(--subtext); margin-bottom:12px;">Columns: <code>Faculty Name</code> or <code>Name</code></p>
           <input type="file" id="facultyCSVInput" accept=".csv" class="neu-inset">
-          <button class="neu-btn" type="button" onclick="processFacultyCSV()" style="margin-top:12px; width:100%;">Upload & Update Faculty</button>
+          <button class="neu-btn" type="button" onclick="processFacultyCSV()" style="margin-top:12px; width:100%;">Upload & Sync Faculty</button>
         </div>
       </div>
       <div id="uploadStatusText" style="margin-top:14px; font-size:13px; font-weight:600;"></div>
@@ -310,7 +341,7 @@
     <!-- Administrative Purge -->
     <div class="neu-card">
       <h3 style="color:var(--crimson); margin-top:0;">Database Housekeeping</h3>
-      <p style="font-size:13px; color:var(--subtext);">Clear all resolved queries. Open and pending queries will remain untouched.</p>
+      <p style="font-size:13px; color:var(--subtext);">Purge resolved tickets to keep the database tidy.</p>
       <button class="neu-btn" type="button" onclick="clearTestEntries()" style="color:var(--crimson);">
         Purge Resolved Enquiries
       </button>
@@ -335,6 +366,7 @@
   let masterRecords = [];
   let currentStaffList = [];
   let activeStudentList = {};
+  let activeFacultyList = [];
   let timelineChartInstance = null;
   let demographicsChartInstance = null;
 
@@ -345,7 +377,34 @@
     document.getElementById('tabNavSettings').classList.toggle('active', tab === 'settings');
   }
 
-  // 1. Inquiries Realtime Aggregation
+  // 1. Initial Directory Ingestion
+  fetch('Combined data Student List CSV.json').then(r => r.json()).then(data => {
+    data.forEach(item => {
+      if (item.Enrolno) {
+        const k = String(item.Enrolno).trim().toUpperCase();
+        if (!activeStudentList[k]) {
+          activeStudentList[k] = {
+            name: item.Name || '',
+            sec: item["Sem I - Section"] || '',
+            sem: item.Semester == 1 ? "1st Sem" : (item.Semester == 3 ? "3rd Sem" : item.Semester + "th Sem")
+          };
+        }
+      }
+    });
+    renderStudentTable();
+  }).catch(() => {});
+
+  fetch('Faculty List.json').then(r => r.json()).then(data => {
+    data.forEach(item => {
+      const n = (item["Faculty Name (Dr./Prof.)"] || "").trim();
+      if (n && n !== "VF" && !activeFacultyList.includes(n)) {
+        activeFacultyList.push(n);
+      }
+    });
+    renderFacultyTable();
+  }).catch(() => {});
+
+  // 2. Real-time Inquiries Aggregator
   db.collection('enquiries').onSnapshot(snapshot => {
     masterRecords = [];
     let resolved = 0;
@@ -396,7 +455,7 @@
     renderKeywordStream('facultyKeywords', facultyWords, 'var(--crimson)');
   });
 
-  // 2. Staff Profiles Listener
+  // 3. Staff Listener
   db.collection('settings').doc('staffList').onSnapshot(doc => {
     currentStaffList = (doc.exists && doc.data().names) ? doc.data().names : ["Person 1", "Person 2", "Person 3", "Person 4", "Person 5"];
     renderStaffChips();
@@ -430,14 +489,15 @@
     db.collection('settings').doc('staffList').set({ names: currentStaffList });
   }
 
-  // 3. Student Master Directory Explorer
+  // 4. Directory Listeners
   db.collection('directory').doc('master').onSnapshot(doc => {
-    if (doc.exists && doc.data().students) {
-      activeStudentList = doc.data().students;
-    } else {
-      activeStudentList = {};
+    if (doc.exists) {
+      const d = doc.data();
+      if (d.students) activeStudentList = Object.assign({}, activeStudentList, d.students);
+      if (d.faculty && Array.isArray(d.faculty)) activeFacultyList = d.faculty;
     }
     renderStudentTable();
+    renderFacultyTable();
   });
 
   function renderStudentTable(filterText = '') {
@@ -452,12 +512,11 @@
       filtered = keys.filter(k => k.toLowerCase().includes(q) || (activeStudentList[k].name || '').toLowerCase().includes(q));
     }
 
-    if (filtered.length === 0) {
+    if (!filtered.length) {
       tbody.innerHTML = '<tr><td colspan="4" style="padding:15px; text-align:center; color:#94a3b8;">No matching student records found.</td></tr>';
       return;
     }
 
-    // Display first 150 entries to keep DOM responsive
     filtered.slice(0, 150).forEach(k => {
       const s = activeStudentList[k];
       tbody.innerHTML += `
@@ -472,20 +531,64 @@
   }
 
   function filterStudentTable() {
-    const q = document.getElementById('studentSearchInput').value.trim();
-    renderStudentTable(q);
+    renderStudentTable(document.getElementById('studentSearchInput').value.trim());
   }
 
   function deleteStudentDirectory() {
-    if (!confirm("Are you sure you want to delete the entire student directory? Auto-population will stop working until a new CSV is uploaded.")) return;
-    db.collection('directory').doc('master').update({
-      students: firebase.firestore.FieldValue.delete()
-    }).then(() => {
-      alert("Student directory removed.");
-    }).catch(err => alert(err.message));
+    if (!confirm("Are you sure you want to clear the active student directory?")) return;
+    activeStudentList = {};
+    db.collection('directory').doc('master').set({ students: {} }, { merge: true })
+      .then(() => { renderStudentTable(); alert("Student directory cleared."); });
   }
 
-  // 4. Side Announcement Broadcast
+  function renderFacultyTable(filterText = '') {
+    const tbody = document.getElementById('facultyTableBody');
+    tbody.innerHTML = '';
+    document.getElementById('facultyCountBadge').innerText = activeFacultyList.length;
+
+    let filtered = activeFacultyList;
+    if (filterText) {
+      const q = filterText.toLowerCase();
+      filtered = activeFacultyList.filter(n => n.toLowerCase().includes(q));
+    }
+
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="3" style="padding:15px; text-align:center; color:#94a3b8;">No matching faculty records found.</td></tr>';
+      return;
+    }
+
+    filtered.forEach((name, i) => {
+      tbody.innerHTML += `
+        <tr style="border-bottom: 1px solid #f1f5f9;">
+          <td style="padding:8px 12px; color:var(--subtext);">${i + 1}</td>
+          <td style="padding:8px 12px; font-weight:600;">${name}</td>
+          <td style="padding:8px 12px; text-align:right;">
+            <span style="color:var(--crimson); cursor:pointer; font-weight:700;" onclick="removeSingleFaculty('${name}')">✕</span>
+          </td>
+        </tr>
+      `;
+    });
+  }
+
+  function filterFacultyTable() {
+    renderFacultyTable(document.getElementById('facultySearchInput').value.trim());
+  }
+
+  function removeSingleFaculty(name) {
+    if (!confirm(`Remove faculty member "${name}"?`)) return;
+    activeFacultyList = activeFacultyList.filter(n => n !== name);
+    db.collection('directory').doc('master').set({ faculty: activeFacultyList }, { merge: true })
+      .then(() => renderFacultyTable());
+  }
+
+  function deleteFacultyDirectory() {
+    if (!confirm("Are you sure you want to clear the entire faculty directory?")) return;
+    activeFacultyList = [];
+    db.collection('directory').doc('master').set({ faculty: [] }, { merge: true })
+      .then(() => { renderFacultyTable(); alert("Faculty directory cleared."); });
+  }
+
+  // 5. Broadcast Notice
   db.collection('settings').doc('broadcast').onSnapshot(doc => {
     if (doc.exists) {
       document.getElementById('noticeTitleInput').value = doc.data().title || '';
@@ -504,16 +607,15 @@
     }).then(() => alert('Announcement saved and published.'));
   }
 
-  // 5. In-Browser CSV Uploads
+  // 6. CSV Parsers
   function processStudentCSV() {
     const file = document.getElementById('studentCSVInput').files[0];
     if (!file) return alert('Select a student CSV file.');
     const status = document.getElementById('uploadStatusText');
-    status.innerText = "Parsing spreadsheet...";
+    status.innerText = "Parsing student spreadsheet...";
 
     Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
+      header: true, skipEmptyLines: true,
       complete: function(results) {
         const studentMap = {};
         results.data.forEach(row => {
@@ -521,9 +623,7 @@
           const name = (row.Name || row.name || row["Student Name"] || "").toString().trim();
           const sec = (row["Sem I - Section"] || row.Sec || row.Section || row.section || "").toString().trim();
           const sem = (row.Semester || row.sem || "").toString().trim();
-          if (enr) {
-            studentMap[enr] = { name: name, sec: sec, sem: sem ? (sem + "th Sem") : "" };
-          }
+          if (enr) studentMap[enr] = { name: name, sec: sec, sem: sem ? (sem + "th Sem") : "" };
         });
 
         db.collection('directory').doc('master').set({ students: studentMap }, { merge: true })
@@ -542,8 +642,7 @@
     status.innerText = "Parsing faculty spreadsheet...";
 
     Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
+      header: true, skipEmptyLines: true,
       complete: function(results) {
         const facList = [];
         results.data.forEach(row => {
@@ -570,7 +669,7 @@
         count++;
       }
     });
-    if (count === 0) return alert("No resolved queries to purge.");
+    if (!count) return alert("No resolved queries to purge.");
     batch.commit().then(() => alert(`Purged ${count} resolved records.`));
   }
 
