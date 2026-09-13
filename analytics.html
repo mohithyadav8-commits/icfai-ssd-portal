@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>SSD Head - Master Operations & Settings</title>
+  <title>SSD Head - Master Operations & Analytics</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
@@ -17,6 +17,7 @@
       --accent: #2563eb;
       --crimson: #dc2626;
       --green: #16a34a;
+      --amber: #d97706;
       --text: #1e293b;
       --subtext: #64748b;
     }
@@ -90,11 +91,11 @@
     
     .kpi-row {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
       gap: 18px;
       margin-bottom: 24px;
     }
-    .stat-val { font-size: 32px; font-weight: 800; margin-top: 6px; }
+    .stat-val { font-size: 30px; font-weight: 800; margin-top: 6px; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
     @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
     
@@ -127,7 +128,7 @@
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; flex-wrap:wrap; gap:15px;">
     <div>
       <h2 style="color:var(--primary); margin:0;">SSD Executive Portal</h2>
-      <p style="color:var(--subtext); font-size:13px; margin:4px 0 0 0;">Operations Intelligence, Real-time Control & Directory Administration</p>
+      <p style="color:var(--subtext); font-size:13px; margin:4px 0 0 0;">TAT Intelligence, Repeat Visitor Analysis & Master Administration</p>
     </div>
     <button class="neu-btn" type="button" onclick="exportMasterCSV()">Download Full Report (CSV)</button>
   </div>
@@ -139,6 +140,8 @@
 
   <!-- VIEW 1: ANALYTICS -->
   <div id="analyticsSection">
+    
+    <!-- Top KPI Row -->
     <div class="kpi-row">
       <div class="neu-card" style="margin-bottom:0;">
         <span style="font-size:12px; font-weight:700; color:var(--subtext);">TOTAL INQUIRIES</span>
@@ -153,11 +156,20 @@
         <div class="stat-val" id="kpiFaculty" style="color:var(--crimson);">0</div>
       </div>
       <div class="neu-card" style="margin-bottom:0;">
-        <span style="font-size:12px; font-weight:700; color:var(--green);">RESOLUTION EFFICIENCY</span>
+        <span style="font-size:12px; font-weight:700; color:var(--amber);">AVG RESOLUTION TAT</span>
+        <div class="stat-val" id="kpiTAT" style="color:var(--amber);">0m</div>
+      </div>
+      <div class="neu-card" style="margin-bottom:0;">
+        <span style="font-size:12px; font-weight:700; color:var(--crimson);">REPEAT VISITORS</span>
+        <div class="stat-val" id="kpiRepeat" style="color:var(--crimson);">0</div>
+      </div>
+      <div class="neu-card" style="margin-bottom:0;">
+        <span style="font-size:12px; font-weight:700; color:var(--green);">RESOLUTION RATE</span>
         <div class="stat-val" id="kpiEff" style="color:var(--green);">0%</div>
       </div>
     </div>
 
+    <!-- Charts Grid -->
     <div class="grid-2" style="margin-bottom: 24px;">
       <div class="neu-card" style="margin-bottom:0;">
         <h3 style="color:var(--primary); margin-top:0;">Daily Influx Timeline</h3>
@@ -169,8 +181,9 @@
       </div>
     </div>
 
+    <!-- Staff Resolution & Turnaround Time Breakdown -->
     <div class="neu-card">
-      <h3 style="color:var(--primary); margin-top:0;">Staff Resolution Breakdown</h3>
+      <h3 style="color:var(--primary); margin-top:0;">Staff Resolution & Handling Speed (TAT) Breakdown</h3>
       <div style="overflow-x:auto;">
         <table style="width:100%; border-collapse:collapse; font-size:14px; text-align:left;">
           <thead>
@@ -179,16 +192,18 @@
               <th style="padding:10px;">Total Assigned</th>
               <th style="padding:10px;">Resolved</th>
               <th style="padding:10px;">Pending</th>
+              <th style="padding:10px;">Avg Handling Time (TAT)</th>
               <th style="padding:10px;">Resolution Rate</th>
             </tr>
           </thead>
           <tbody id="staffTableBody">
-            <tr><td colspan="5" style="padding:15px; text-align:center; color:#94a3b8;">Aggregating records...</td></tr>
+            <tr><td colspan="6" style="padding:15px; text-align:center; color:#94a3b8;">Aggregating records...</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
+    <!-- Keyword Streams -->
     <div class="grid-2">
       <div class="neu-card" style="margin-bottom:0;">
         <h3 style="color:var(--accent); margin-top:0;">Student Topics (Frequent Concerns)</h3>
@@ -206,10 +221,10 @@
   <!-- VIEW 2: MASTER SETTINGS -->
   <div id="settingsSection" style="display:none;">
     
-    <!-- Realtime Notice Broadcast -->
+    <!-- Announcement Broadcast -->
     <div class="neu-card">
       <h3 style="color:var(--primary); margin-top:0;">Entrance Desk Announcement Widget</h3>
-      <p style="font-size:13px; color:var(--subtext);">Notice displayed exclusively on the student visit screen.</p>
+      <p style="font-size:13px; color:var(--subtext);">Pinned exclusively to the student visit screen.</p>
       
       <div class="grid-2">
         <div>
@@ -235,7 +250,7 @@
     <!-- Staff Identity Configuration -->
     <div class="neu-card">
       <h3 style="color:var(--primary); margin-top:0;">SSD Staff Profile Management</h3>
-      <p style="font-size:13px; color:var(--subtext);">Add or remove staff desks. Synchronizes immediately across all terminals.</p>
+      <p style="font-size:13px; color:var(--subtext);">Add or remove staff desks. Synchronizes immediately with all terminals.</p>
 
       <div style="display:flex; gap:12px; margin-bottom:18px;">
         <input type="text" id="newStaffInput" class="neu-inset" placeholder="Staff Name (e.g. Person 6 or Dr. Sharma)">
@@ -313,12 +328,10 @@
       </div>
     </div>
 
-    <!-- Bulk CSV Directory Upload -->
+    <!-- Bulk CSV Upload -->
     <div class="neu-card">
       <h3 style="color:var(--primary); margin-top:0;">Upload New Directory Batch (Raw CSV)</h3>
-      <p style="font-size:13px; color:var(--subtext); line-height:1.5;">
-        Upload standard Excel CSV files. Processed directly in the browser.
-      </p>
+      <p style="font-size:13px; color:var(--subtext); line-height:1.5;">Upload standard Excel CSV files. Processed directly in the browser.</p>
 
       <div class="grid-2">
         <div style="background:#f8fafc; padding:18px; border-radius:14px;">
@@ -377,7 +390,6 @@
     document.getElementById('tabNavSettings').classList.toggle('active', tab === 'settings');
   }
 
-  // 1. Initial Directory Ingestion
   fetch('Combined data Student List CSV.json').then(r => r.json()).then(data => {
     data.forEach(item => {
       if (item.Enrolno) {
@@ -404,15 +416,18 @@
     renderFacultyTable();
   }).catch(() => {});
 
-  // 2. Real-time Inquiries Aggregator
   db.collection('enquiries').onSnapshot(snapshot => {
     masterRecords = [];
     let resolved = 0;
     let students = 0;
     let faculty = 0;
+    let repeatCount = 0;
+    let totalTATMinutes = 0;
+    let resolvedWithTATCount = 0;
+
     let staffStats = {};
-    currentStaffList.forEach(name => { staffStats[name] = { assigned: 0, resolved: 0 }; });
-    staffStats["No Staff Available"] = { assigned: 0, resolved: 0 };
+    currentStaffList.forEach(name => { staffStats[name] = { assigned: 0, resolved: 0, totalTAT: 0 }; });
+    staffStats["No Staff Available"] = { assigned: 0, resolved: 0, totalTAT: 0 };
 
     let studentWords = {};
     let facultyWords = {};
@@ -424,7 +439,15 @@
       d.docId = doc.id;
       masterRecords.push(d);
 
-      if (d.status === 'Resolved') resolved++;
+      if (d.status === 'Resolved') {
+        resolved++;
+        if (d.handlingDurationMinutes && d.handlingDurationMinutes > 0) {
+          totalTATMinutes += d.handlingDurationMinutes;
+          resolvedWithTATCount++;
+        }
+      }
+
+      if (d.isRepeatVisitor) repeatCount++;
 
       if (d.type === 'Faculty') {
         faculty++;
@@ -435,9 +458,12 @@
       }
 
       const s = d.assignedStaff || "No Staff Available";
-      if (!staffStats[s]) staffStats[s] = { assigned: 0, resolved: 0 };
+      if (!staffStats[s]) staffStats[s] = { assigned: 0, resolved: 0, totalTAT: 0 };
       staffStats[s].assigned++;
-      if (d.status === 'Resolved') staffStats[s].resolved++;
+      if (d.status === 'Resolved') {
+        staffStats[s].resolved++;
+        if (d.handlingDurationMinutes) staffStats[s].totalTAT += d.handlingDurationMinutes;
+      }
 
       const dateKey = d.createdDate ? d.createdDate.substring(0, 10) : new Date().toISOString().substring(0, 10);
       dailyTimeline[dateKey] = (dailyTimeline[dateKey] || 0) + 1;
@@ -447,7 +473,11 @@
     document.getElementById('kpiTotal').innerText = total;
     document.getElementById('kpiStudent').innerText = students;
     document.getElementById('kpiFaculty').innerText = faculty;
+    document.getElementById('kpiRepeat').innerText = repeatCount;
     document.getElementById('kpiEff').innerText = total ? Math.round((resolved / total) * 100) + '%' : '0%';
+
+    const avgTAT = resolvedWithTATCount > 0 ? (totalTATMinutes / resolvedWithTATCount).toFixed(1) + 'm' : 'N/A';
+    document.getElementById('kpiTAT').innerText = avgTAT;
 
     renderStaffTable(staffStats);
     renderCharts(dailyTimeline, students, faculty);
@@ -455,7 +485,6 @@
     renderKeywordStream('facultyKeywords', facultyWords, 'var(--crimson)');
   });
 
-  // 3. Staff Listener
   db.collection('settings').doc('staffList').onSnapshot(doc => {
     currentStaffList = (doc.exists && doc.data().names) ? doc.data().names : ["Person 1", "Person 2", "Person 3", "Person 4", "Person 5"];
     renderStaffChips();
@@ -489,7 +518,6 @@
     db.collection('settings').doc('staffList').set({ names: currentStaffList });
   }
 
-  // 4. Directory Listeners
   db.collection('directory').doc('master').onSnapshot(doc => {
     if (doc.exists) {
       const d = doc.data();
@@ -588,7 +616,6 @@
       .then(() => { renderFacultyTable(); alert("Faculty directory cleared."); });
   }
 
-  // 5. Broadcast Notice
   db.collection('settings').doc('broadcast').onSnapshot(doc => {
     if (doc.exists) {
       document.getElementById('noticeTitleInput').value = doc.data().title || '';
@@ -607,7 +634,6 @@
     }).then(() => alert('Announcement saved and published.'));
   }
 
-  // 6. CSV Parsers
   function processStudentCSV() {
     const file = document.getElementById('studentCSVInput').files[0];
     if (!file) return alert('Select a student CSV file.');
@@ -701,12 +727,15 @@
       const s = stats[staff];
       const pending = s.assigned - s.resolved;
       const rate = s.assigned ? Math.round((s.resolved / s.assigned) * 100) + '%' : 'N/A';
+      const avgStaffTAT = s.resolved > 0 && s.totalTAT > 0 ? (s.totalTAT / s.resolved).toFixed(1) + 'm' : 'N/A';
+      
       tbody.innerHTML += `
         <tr style="border-bottom: 1px solid #e2e8f0;">
           <td style="padding:10px; font-weight:600;">${staff}</td>
           <td style="padding:10px;">${s.assigned}</td>
           <td style="padding:10px; color:var(--green); font-weight:600;">${s.resolved}</td>
           <td style="padding:10px; color:var(--crimson); font-weight:600;">${pending}</td>
+          <td style="padding:10px; color:var(--amber); font-weight:700;">${avgStaffTAT}</td>
           <td style="padding:10px; font-weight:700;">${rate}</td>
         </tr>
       `;
@@ -750,9 +779,9 @@
 
   function exportMasterCSV() {
     if (!masterRecords.length) return alert("No data available to export.");
-    let csv = "Type,Name,Enrollment,Section,Semester,Assigned Staff,Query,Solution Remarks,Status,Created Date\n";
+    let csv = "Token,Type,Name,Enrollment,Section,Semester,Assigned Staff,Query,Solution Remarks,Status,Handling Duration (Mins),Repeat Visitor,Created Date\n";
     masterRecords.forEach(r => {
-      csv += `"${r.type || ''}","${r.name || ''}","${r.enrollment || ''}","${r.sec || ''}","${r.sem || ''}","${r.assignedStaff || ''}","${(r.query || '').replace(/"/g, '""')}","${(r.solution || '').replace(/"/g, '""')}","${r.status || ''}","${r.createdDate || ''}"\n`;
+      csv += `"${r.tokenNumber || ''}","${r.type || ''}","${r.name || ''}","${r.enrollment || ''}","${r.sec || ''}","${r.sem || ''}","${r.assignedStaff || ''}","${(r.query || '').replace(/"/g, '""')}","${(r.solution || '').replace(/"/g, '""')}","${r.status || ''}","${r.handlingDurationMinutes || ''}","${r.isRepeatVisitor ? 'YES' : 'NO'}","${r.createdDate || ''}"\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv' });
     const link = document.createElement('a');
