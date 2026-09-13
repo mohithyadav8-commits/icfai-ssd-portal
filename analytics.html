@@ -141,7 +141,6 @@
   <!-- VIEW 1: ANALYTICS -->
   <div id="analyticsSection">
     
-    <!-- Top KPI Row -->
     <div class="kpi-row">
       <div class="neu-card" style="margin-bottom:0;">
         <span style="font-size:12px; font-weight:700; color:var(--subtext);">TOTAL INQUIRIES</span>
@@ -169,7 +168,6 @@
       </div>
     </div>
 
-    <!-- Charts Grid -->
     <div class="grid-2" style="margin-bottom: 24px;">
       <div class="neu-card" style="margin-bottom:0;">
         <h3 style="color:var(--primary); margin-top:0;">Daily Influx Timeline</h3>
@@ -181,7 +179,6 @@
       </div>
     </div>
 
-    <!-- Staff Resolution & Turnaround Time Breakdown -->
     <div class="neu-card">
       <h3 style="color:var(--primary); margin-top:0;">Staff Resolution & Handling Speed (TAT) Breakdown</h3>
       <div style="overflow-x:auto;">
@@ -203,7 +200,6 @@
       </div>
     </div>
 
-    <!-- Keyword Streams -->
     <div class="grid-2">
       <div class="neu-card" style="margin-bottom:0;">
         <h3 style="color:var(--accent); margin-top:0;">Student Topics (Frequent Concerns)</h3>
@@ -221,7 +217,6 @@
   <!-- VIEW 2: MASTER SETTINGS -->
   <div id="settingsSection" style="display:none;">
     
-    <!-- Announcement Broadcast -->
     <div class="neu-card">
       <h3 style="color:var(--primary); margin-top:0;">Entrance Desk Announcement Widget</h3>
       <p style="font-size:13px; color:var(--subtext);">Pinned exclusively to the student visit screen.</p>
@@ -247,7 +242,6 @@
       </button>
     </div>
 
-    <!-- Staff Identity Configuration -->
     <div class="neu-card">
       <h3 style="color:var(--primary); margin-top:0;">SSD Staff Profile Management</h3>
       <p style="font-size:13px; color:var(--subtext);">Add or remove staff desks. Synchronizes immediately with all terminals.</p>
@@ -779,9 +773,9 @@
 
   function exportMasterCSV() {
     if (!masterRecords.length) return alert("No data available to export.");
-    let csv = "Token,Type,Name,Enrollment,Section,Semester,Assigned Staff,Query,Solution Remarks,Status,Handling Duration (Mins),Repeat Visitor,Created Date\n";
+    let csv = "Type,Name,Enrollment,Section,Semester,Assigned Staff,Transferred From,Query,Solution Remarks,Status,Handling Duration (Mins),Repeat Visitor,Created Date\n";
     masterRecords.forEach(r => {
-      csv += `"${r.tokenNumber || ''}","${r.type || ''}","${r.name || ''}","${r.enrollment || ''}","${r.sec || ''}","${r.sem || ''}","${r.assignedStaff || ''}","${(r.query || '').replace(/"/g, '""')}","${(r.solution || '').replace(/"/g, '""')}","${r.status || ''}","${r.handlingDurationMinutes || ''}","${r.isRepeatVisitor ? 'YES' : 'NO'}","${r.createdDate || ''}"\n`;
+      csv += `"${r.type || ''}","${r.name || ''}","${r.enrollment || ''}","${r.sec || ''}","${r.sem || ''}","${r.assignedStaff || ''}","${r.transferredFrom || ''}","${(r.query || '').replace(/"/g, '""')}","${(r.solution || '').replace(/"/g, '""')}","${r.status || ''}","${r.handlingDurationMinutes || ''}","${r.isRepeatVisitor ? 'YES' : 'NO'}","${r.createdDate || ''}"\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv' });
     const link = document.createElement('a');
