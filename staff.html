@@ -2,73 +2,152 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>SSD Staff Queue</title>
+  <title>SSD Staff Workstation</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
   <style>
     :root {
-      --bg: #e0e5ec;
-      --shadow-light: #ffffff;
-      --shadow-dark: #a3b1c6;
-      --primary: #1a365d;
-      --accent: #2b6cb0;
+      --bg: #e2e8f0;
+      --light-shadow: #ffffff;
+      --dark-shadow: #b8c2d1;
+      --primary: #1e3a8a;
+      --accent: #2563eb;
+      --crimson: #dc2626;
+      --green: #16a34a;
     }
     body {
       background: var(--bg);
-      font-family: 'Segoe UI', Tahoma, sans-serif;
-      padding: 25px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       margin: 0;
-    }
-    .neu-box {
-      background: var(--bg);
-      border-radius: 18px;
-      box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
-      padding: 24px;
-      margin-bottom: 20px;
-    }
-    .neu-input {
-      border: none;
-      border-radius: 10px;
-      padding: 12px;
-      background: var(--bg);
-      box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
-      width: 100%;
+      padding: 30px 20px;
+      color: #1e293b;
+      min-height: 100vh;
       box-sizing: border-box;
-      margin: 8px 0;
+    }
+
+    /* Tactile Neumorphism Foundations */
+    .neu-card {
+      background: var(--bg);
+      border-radius: 20px;
+      box-shadow: 10px 10px 20px var(--dark-shadow), -10px -10px 20px var(--light-shadow);
+      padding: 24px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      animation: fadeIn 0.4s ease-out;
+    }
+    .neu-inset {
+      background: var(--bg);
+      border: none;
+      border-radius: 14px;
+      padding: 14px 18px;
+      box-shadow: inset 4px 4px 8px var(--dark-shadow), inset -4px -4px 8px var(--light-shadow);
       outline: none;
       font-size: 14px;
+      width: 100%;
+      box-sizing: border-box;
+      color: #1e293b;
     }
     .neu-btn {
       border: none;
-      padding: 12px 20px;
-      border-radius: 10px;
-      cursor: pointer;
+      border-radius: 12px;
+      padding: 12px 22px;
       background: var(--bg);
+      box-shadow: 5px 5px 10px var(--dark-shadow), -5px -5px 10px var(--light-shadow);
+      cursor: pointer;
       font-weight: 600;
-      color: var(--primary);
-      box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
-      transition: 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+    }
+    .neu-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 7px 7px 14px var(--dark-shadow), -7px -7px 14px var(--light-shadow);
     }
     .neu-btn:active {
-      box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
+      transform: translateY(0);
+      box-shadow: inset 3px 3px 6px var(--dark-shadow), inset -3px -3px 6px var(--light-shadow);
     }
-    .ticket-card {
+
+    /* Glowing Pulsing Beacon for Faculty Emergencies */
+    @keyframes pulseAlert {
+      0% {
+        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+        transform: scale(1);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
+        transform: scale(1.03);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+        transform: scale(1);
+      }
+    }
+    .faculty-alert-pulse {
+      background: #fee2e2 !important;
+      border: 1px solid #f87171;
+      animation: pulseAlert 1.6s infinite ease-in-out;
+    }
+
+    /* Grid Layouts */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+      margin-top: 25px;
+    }
+    @media (max-width: 900px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+    }
+
+    .kpi-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    .kpi-card {
       background: var(--bg);
+      padding: 18px 20px;
       border-radius: 16px;
-      padding: 20px;
+      box-shadow: 6px 6px 14px var(--dark-shadow), -6px -6px 14px var(--light-shadow);
+      display: flex;
+      flex-direction: column;
+    }
+    .kpi-card .val {
+      font-size: 28px;
+      font-weight: 800;
+      margin-top: 6px;
+      color: var(--primary);
+    }
+
+    /* Section Tabs */
+    .column-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid #cbd5e1;
+      padding-bottom: 12px;
       margin-bottom: 18px;
-      box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
 
 <!-- Login / Profile Selection Screen -->
-<div class="neu-box" style="max-width: 450px; margin: 40px auto;" id="loginBox">
-  <h3 style="color:var(--primary); text-align:center; margin-top:0;">SSD Staff Login</h3>
-  <label style="font-size:14px; color:#555;">Choose your profile to see assigned students:</label>
-  <select id="staffSelect" class="neu-input" style="margin-top:10px;">
+<div class="neu-card" id="loginBox" style="max-width: 440px; margin: 60px auto; text-align: center;">
+  <h2 style="color:var(--primary); margin-bottom: 8px;">SSD Staff Terminal</h2>
+  <p style="color:#64748b; font-size:14px; margin-top:0;">Access your real-time desk assignment queue</p>
+  
+  <select id="staffSelect" class="neu-inset" style="margin-top: 15px;">
     <option value="">-- Choose Profile --</option>
     <option value="Person 1">Person 1</option>
     <option value="Person 2">Person 2</option>
@@ -76,16 +155,72 @@
     <option value="Person 4">Person 4</option>
     <option value="Person 5">Person 5</option>
   </select>
-  <button onclick="loginStaff()" type="button" class="neu-btn" style="width: 100%; margin-top: 15px; color:var(--accent);">Open Desk Queue</button>
+  
+  <button onclick="loginStaff()" type="button" class="neu-btn" style="width: 100%; margin-top: 20px; color:var(--accent);">
+    Open Workstation
+  </button>
 </div>
 
-<!-- Desk View Screen -->
-<div id="deskView" style="display:none; max-width: 850px; margin: auto;">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-    <h2 id="staffHeader" style="color:var(--primary); margin:0;">Staff Dashboard</h2>
-    <button onclick="location.reload()" type="button" class="neu-btn">Switch User</button>
+<!-- Main Split Desk Interface -->
+<div id="deskView" style="display:none; max-width: 1280px; margin: auto;">
+  
+  <!-- Header Bar -->
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
+    <div>
+      <h2 id="staffHeader" style="color:var(--primary); margin:0;">Desk Terminal</h2>
+      <span style="font-size: 13px; color:#64748b;">Live Firebase Firestore Sync Connected</span>
+    </div>
+    <button onclick="location.reload()" type="button" class="neu-btn">
+      Switch User
+    </button>
   </div>
-  <div id="ticketsContainer"></div>
+
+  <!-- Realtime Desk Top Counters -->
+  <div class="kpi-bar">
+    <div class="kpi-card">
+      <span style="font-size: 12px; font-weight:700; color:#64748b;">TOTAL QUEUE OPEN</span>
+      <div class="val" id="totalQueueCount">0</div>
+    </div>
+    <div class="kpi-card">
+      <span style="font-size: 12px; font-weight:700; color:#64748b;">STUDENT QUERIES</span>
+      <div class="val" id="studentQueueCount" style="color:var(--accent);">0</div>
+    </div>
+    <div class="kpi-card" id="facKpiCard">
+      <span style="font-size: 12px; font-weight:700; color:#64748b;">FACULTY QUERIES</span>
+      <div class="val" id="facultyQueueCount" style="color:var(--crimson);">0</div>
+    </div>
+  </div>
+
+  <!-- Split Grid: Students vs Faculty -->
+  <div class="dashboard-grid">
+    
+    <!-- LEFT: Student Queue -->
+    <div class="neu-card">
+      <div class="column-header">
+        <h3 style="margin:0; color:var(--primary); display:flex; align-items:center; gap:8px;">
+          👨‍🎓 Student Enquiries
+        </h3>
+        <span id="studentBadge" style="background:#e2e8f0; padding:4px 10px; border-radius:12px; font-weight:700; font-size:12px; box-shadow: inset 2px 2px 4px var(--dark-shadow), inset -2px -2px 4px var(--light-shadow);">0 Active</span>
+      </div>
+      <div id="studentContainer">
+        <p style="color:#94a3b8; text-align:center; padding:30px 0;">No active student inquiries.</p>
+      </div>
+    </div>
+
+    <!-- RIGHT: Faculty Queue (With Alerting System) -->
+    <div class="neu-card" id="facSectionCard">
+      <div class="column-header">
+        <h3 style="margin:0; color:var(--crimson); display:flex; align-items:center; gap:8px;">
+          👨‍🏫 Faculty Enquiries
+        </h3>
+        <span id="facultyBadge" style="background:#fee2e2; color:var(--crimson); padding:4px 10px; border-radius:12px; font-weight:700; font-size:12px; box-shadow: 2px 2px 5px var(--dark-shadow);">0 Active</span>
+      </div>
+      <div id="facultyContainer">
+        <p style="color:#94a3b8; text-align:center; padding:30px 0;">No active faculty inquiries.</p>
+      </div>
+    </div>
+
+  </div>
 </div>
 
 <script>
@@ -105,95 +240,118 @@
   function loginStaff() {
     activeStaff = document.getElementById('staffSelect').value;
     if (!activeStaff) {
-      alert('Please select your staff profile name from the dropdown.');
+      alert('Please select your staff identity.');
       return;
     }
     document.getElementById('loginBox').style.display = 'none';
     document.getElementById('deskView').style.display = 'block';
-    document.getElementById('staffHeader').innerText = "Assigned Queue: " + activeStaff;
-    loadQueue();
+    document.getElementById('staffHeader').innerText = "Workstation: " + activeStaff;
+    listenToDeskQueue();
   }
 
-  function loadQueue() {
-    // Listens in real time without triggering Firestore index errors
-    db.collection('enquiries').onSnapshot(function(snapshot) {
-      const container = document.getElementById('ticketsContainer');
-      container.innerHTML = '';
-      let activeCount = 0;
+  function listenToDeskQueue() {
+    db.collection('enquiries').onSnapshot(snapshot => {
+      const stuContainer = document.getElementById('studentContainer');
+      const facContainer = document.getElementById('facultyContainer');
+      
+      let stuListHTML = '';
+      let facListHTML = '';
+      
+      let stuCount = 0;
+      let facCount = 0;
 
-      snapshot.forEach(function(doc) {
+      snapshot.forEach(doc => {
         const d = doc.data();
         const id = doc.id;
-        
-        // Filter in browser memory for instant display
+
         const isAssigned = (d.assignedStaff === activeStaff || d.assignedStaff === 'No Staff Available');
         const isOpen = (d.status === 'Open' || d.status === 'Open - Pending Action');
 
         if (isAssigned && isOpen) {
-          activeCount++;
-          const secSem = (d.sec || d.sem) ? `${d.sec || ''} | ${d.sem || ''}` : 'Faculty Inquiry';
-          const enroll = d.enrollment && d.enrollment !== 'FACULTY' ? `(${d.enrollment})` : '';
-
-          container.innerHTML += `
-            <div class="ticket-card">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <b style="color:var(--primary); font-size:16px;">${d.type}: ${d.name} ${enroll}</b>
-                <span style="color:#c53030; font-weight:700; font-size:13px; background:#ffd8d8; padding:3px 8px; border-radius:6px;">Status: ${d.status}</span>
-              </div>
-              <p style="margin: 8px 0; font-size:13px; color:#555;"><b>Details:</b> ${secSem}</p>
-              <div style="background:#d9e0ea; padding:12px; border-radius:8px; margin: 10px 0; font-size:14px; color:#222;">
-                <b>Query:</b> ${d.query}
-              </div>
-              <label style="font-size:13px; font-weight:600; color:#444;">Resolution / Solution remarks:</label>
-              <textarea id="sol_${id}" class="neu-input" rows="2" placeholder="State solution given..."></textarea>
-              
-              <label style="font-size:13px; font-weight:600; color:#444;">Student Email (Optional):</label>
-              <input type="email" id="mail_${id}" class="neu-input" value="${d.studentEmail || ''}" placeholder="student@icfai.edu">
-
-              <div style="margin-top:14px; display:flex; gap:12px;">
-                <button class="neu-btn" style="color:green; flex:1;" type="button" onclick="resolveTicket('${id}')">Resolve & Close Ticket</button>
-                <button class="neu-btn" style="color:#c53030; flex:1;" type="button" onclick="keepPending('${id}')">No Solution (Keep Open)</button>
-              </div>
-            </div>
-          `;
+          if (d.type === 'Faculty') {
+            facCount++;
+            facListHTML += renderCard(id, d, true);
+          } else {
+            stuCount++;
+            stuListHTML += renderCard(id, d, false);
+          }
         }
       });
 
-      if (activeCount === 0) {
-        container.innerHTML = '<div class="neu-box" style="text-align:center;"><p style="color:#666; margin:0;">No pending enquiries for this desk right now.</p></div>';
+      // Update counters
+      document.getElementById('totalQueueCount').innerText = stuCount + facCount;
+      document.getElementById('studentQueueCount').innerText = stuCount;
+      document.getElementById('facultyQueueCount').innerText = facCount;
+      document.getElementById('studentBadge').innerText = stuCount + " Active";
+      document.getElementById('facultyBadge').innerText = facCount + " Active";
+
+      // Toggle live red blinking beacon if faculty inquiries exist
+      const facCard = document.getElementById('facSectionCard');
+      const facKpi = document.getElementById('facKpiCard');
+      if (facCount > 0) {
+        facCard.classList.add('faculty-alert-pulse');
+        facKpi.classList.add('faculty-alert-pulse');
+      } else {
+        facCard.classList.remove('faculty-alert-pulse');
+        facKpi.classList.remove('faculty-alert-pulse');
       }
-    }, function(error) {
-      console.error("Realtime listener error:", error);
-      alert("Error loading queue: " + error.message);
+
+      stuContainer.innerHTML = stuListHTML || '<p style="color:#94a3b8; text-align:center; padding:30px 0;">No active student inquiries.</p>';
+      facContainer.innerHTML = facListHTML || '<p style="color:#94a3b8; text-align:center; padding:30px 0;">No active faculty inquiries.</p>';
     });
+  }
+
+  function renderCard(id, d, isFaculty) {
+    const timeStr = d.createdDate ? new Date(d.createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently';
+    return `
+      <div class="neu-card" style="margin-bottom: 16px; padding: 18px; border-left: 4px solid ${isFaculty ? 'var(--crimson)' : 'var(--accent)'}">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <b style="font-size:15px; color:#0f172a;">${d.name}</b>
+            ${!isFaculty && d.enrollment ? `<span style="font-size:12px; color:#64748b; margin-left:6px;">(${d.enrollment})</span>` : ''}
+            <div style="font-size:12px; color:#64748b; margin-top:2px;">
+              ${isFaculty ? 'Faculty Member' : `${d.sec || ''} • ${d.sem || ''}`}
+            </div>
+          </div>
+          <span style="font-size:11px; background:#e2e8f0; padding:2px 8px; border-radius:8px; font-weight:600;">${timeStr}</span>
+        </div>
+
+        <div style="background:#f1f5f9; padding:12px; border-radius:10px; margin: 12px 0; font-size:13px; line-height:1.5; color:#334155;">
+          ${d.query}
+        </div>
+
+        <textarea id="sol_${id}" class="neu-inset" rows="2" placeholder="Record resolution actions..." style="font-size:13px;"></textarea>
+        
+        <div style="margin-top:10px; display:flex; gap:10px;">
+          <button type="button" class="neu-btn" style="color:var(--green); flex:1; font-size:13px;" onclick="resolveTicket('${id}')">
+            ✓ Resolve & Close
+          </button>
+          <button type="button" class="neu-btn" style="color:var(--crimson); flex:1; font-size:13px;" onclick="keepPending('${id}')">
+            ⏳ Keep Open
+          </button>
+        </div>
+      </div>
+    `;
   }
 
   function resolveTicket(id) {
     const sol = document.getElementById('sol_' + id).value.trim();
-    if (!sol) {
-      if (!confirm("No remarks entered. Are you sure you want to mark this query resolved?")) return;
-    }
+    if (!sol && !confirm("No remarks entered. Close ticket anyway?")) return;
 
     db.collection('enquiries').doc(id).update({
       status: 'Resolved',
-      solution: sol,
+      solution: sol || 'Resolved without remarks',
       resolvedBy: activeStaff,
       resolvedDate: new Date().toISOString()
-    })
-    .then(() => alert("Ticket marked as Resolved and closed."))
-    .catch(err => alert("Error: " + err.message));
+    }).catch(err => alert(err.message));
   }
 
   function keepPending(id) {
-    const mail = document.getElementById('mail_' + id).value.trim();
     db.collection('enquiries').doc(id).update({
       status: 'Open - Pending Action',
-      studentEmail: mail,
       flaggedBy: activeStaff,
       flaggedDate: new Date().toISOString()
-    })
-    .then(() => alert("Ticket recorded as Open - Pending Action."))
-    .catch(err => alert("Error: " + err.message));
+    }).then(() => alert("Ticket marked as Open / Under Review."));
   }
 </script>
 </body>
