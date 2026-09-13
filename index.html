@@ -15,7 +15,6 @@
       --accent: #2b6cb0;
       --crimson: #dc2626;
       --amber: #d97706;
-      --green: #16a34a;
     }
     body {
       background: var(--bg);
@@ -146,36 +145,6 @@
       animation: fadeIn 0.25s ease;
     }
 
-    /* Token Slip Modal */
-    #tokenModal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(5px);
-      z-index: 1000;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-    .token-box {
-      background: var(--bg);
-      border-radius: 24px;
-      padding: 35px 30px;
-      max-width: 420px;
-      width: 100%;
-      text-align: center;
-      box-shadow: 16px 16px 32px var(--shadow-dark), -16px -16px 32px var(--shadow-light);
-      box-sizing: border-box;
-      animation: fadeIn 0.3s ease-out;
-    }
-    .token-display {
-      font-size: 54px;
-      font-weight: 900;
-      color: var(--primary);
-      margin: 15px 0;
-      letter-spacing: 2px;
-    }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
@@ -247,6 +216,7 @@
     </form>
   </div>
 
+  <!-- Announcement Card -->
   <div id="sideNoticeContainer">
     <div class="notice-header-badge">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
@@ -256,18 +226,6 @@
     <div id="sideNoticeBody" style="font-size:13px; line-height:1.55; color:#334155;"></div>
   </div>
 
-</div>
-
-<!-- Digital Queue Token Slip Modal -->
-<div id="tokenModal">
-  <div class="token-box">
-    <div style="font-size:13px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:1px;">ICFAI Student Service Department</div>
-    <h3 style="margin:6px 0 0 0; color:var(--primary);">Your Digital Queue Token</h3>
-    <div class="token-display" id="tokenNumberDisplay">S-01</div>
-    <div style="font-size:15px; font-weight:600; color:#1e293b;" id="tokenVisitorName">Student Name</div>
-    <p style="font-size:13px; color:#64748b; margin:10px 0 20px 0;" id="tokenDeskMsg">Please proceed to the waiting area. Your assigned desk will attend to you shortly.</p>
-    <button type="button" class="neu-btn" onclick="closeTokenModal()">Acknowledge & Close</button>
-  </div>
 </div>
 
 <script>
@@ -420,24 +378,6 @@
     }
   }
 
-  // Generate Daily Sequential Token (e.g., S-01, F-01)
-  async function generateToken(prefix) {
-    const todayStr = new Date().toISOString().substring(0, 10);
-    const tokenDocRef = db.collection('tokenCounters').doc(todayStr);
-    return db.runTransaction(async transaction => {
-      const doc = await transaction.get(tokenDocRef);
-      let current = 0;
-      if (doc.exists && doc.data()[prefix]) {
-        current = doc.data()[prefix];
-      }
-      const next = current + 1;
-      transaction.set(tokenDocRef, { [prefix]: next }, { merge: true });
-      const padded = next < 10 ? '0' + next : String(next);
-      return `${prefix}-${padded}`;
-    });
-  }
-
-  // Check Repeat Visitor Status (Last 7 Days)
   async function checkRecentVisits(enrollment) {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     try {
@@ -451,22 +391,11 @@
     }
   }
 
-  function showTokenModal(token, name, staff) {
-    document.getElementById('tokenNumberDisplay').innerText = token;
-    document.getElementById('tokenVisitorName').innerText = name;
-    document.getElementById('tokenDeskMsg').innerText = `Assigned to: ${staff}. Please take a seat in the waiting area.`;
-    document.getElementById('tokenModal').style.display = 'flex';
-  }
-
-  function closeTokenModal() {
-    document.getElementById('tokenModal').style.display = 'none';
-  }
-
   document.getElementById('studentForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const btn = document.getElementById('stuSubmitBtn');
     btn.disabled = true;
-    btn.innerText = "Generating Token...";
+    btn.innerText = "Submitting...";
 
     const enr = document.getElementById('stuEnroll').value.trim().toUpperCase();
     const name = document.getElementById('stuName').value.trim();
@@ -476,7 +405,6 @@
     const query = document.getElementById('stuQuery').value.trim();
 
     try {
-      // 1. Auto-update Student Directory
       if (!studentMap[enr] || studentMap[enr].name !== name) {
         studentMap[enr] = { name: name, sec: sec, sem: sem };
         db.collection('directory').doc('master').set({
@@ -484,18 +412,12 @@
         }, { merge: true }).catch(() => {});
       }
 
-      // 2. Repeat Visitor Detection
       const priorVisits = await checkRecentVisits(enr);
-      const isRepeat = priorVisits >= 1; // already visited within 7 days
-
-      // 3. Generate Sequential Token
-      const token = await generateToken('S');
-
-      // 4. Save Enquiry with Millisecond Tracking
+      const isRepeat = priorVisits >= 1;
       const nowIso = new Date().toISOString();
+
       await db.collection('enquiries').add({
         type: 'Student',
-        tokenNumber: token,
         enrollment: enr,
         name: name,
         sec: sec,
@@ -509,7 +431,7 @@
         startTimestamp: Date.now()
       });
 
-      showTokenModal(token, name, staff);
+      alert(`Thank you, ${name}. Your enquiry has been submitted to ${staff}.`);
       document.getElementById('studentForm').reset();
       document.getElementById('stuStatusAlert').style.display = 'none';
     } catch (err) {
@@ -524,7 +446,7 @@
     e.preventDefault();
     const btn = document.getElementById('facSubmitBtn');
     btn.disabled = true;
-    btn.innerText = "Generating Token...";
+    btn.innerText = "Submitting...";
 
     const facName = document.getElementById('facName').value.trim();
     const staff = document.getElementById('facStaff').value;
@@ -538,12 +460,10 @@
         }, { merge: true }).catch(() => {});
       }
 
-      const token = await generateToken('F');
       const nowIso = new Date().toISOString();
 
       await db.collection('enquiries').add({
         type: 'Faculty',
-        tokenNumber: token,
         enrollment: 'FACULTY',
         name: facName,
         sec: '',
@@ -556,7 +476,7 @@
         startTimestamp: Date.now()
       });
 
-      showTokenModal(token, facName, staff);
+      alert(`Enquiry submitted successfully for ${facName}.`);
       document.getElementById('facultyForm').reset();
       document.getElementById('facStatusAlert').style.display = 'none';
     } catch (err) {
