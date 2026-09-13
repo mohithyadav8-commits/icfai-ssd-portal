@@ -14,17 +14,30 @@
       --primary: #1a365d;
       --accent: #2b6cb0;
       --crimson: #dc2626;
+      --amber: #d97706;
     }
     body {
       background: var(--bg);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 25px 15px;
       margin: 0;
+      padding: 30px 20px;
       min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
       box-sizing: border-box;
+    }
+    .layout-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 30px;
+      width: 100%;
+      max-width: 1050px;
+      margin: auto;
+    }
+    @media (max-width: 900px) {
+      .layout-wrapper { flex-direction: column-reverse; align-items: center; }
     }
     .neu-card {
       background: var(--bg);
@@ -32,37 +45,18 @@
       box-shadow: 12px 12px 24px var(--shadow-dark), -12px -12px 24px var(--shadow-light);
       padding: 35px;
       width: 100%;
-      max-width: 580px;
+      max-width: 560px;
       box-sizing: border-box;
     }
     .header { text-align: center; margin-bottom: 20px; }
-    .header img { max-height: 55px; margin-bottom: 10px; }
-    
-    /* Live Notice Board Banner */
-    #noticeBanner {
-      display: none;
-      width: 100%;
-      max-width: 580px;
-      background: #fef3c7;
-      color: #92400e;
-      border: 1px solid #fcd34d;
-      padding: 14px 18px;
-      border-radius: 16px;
-      margin-bottom: 20px;
-      box-sizing: border-box;
-      font-size: 14px;
-      line-height: 1.4;
-      box-shadow: 4px 4px 10px var(--shadow-dark), -4px -4px 10px var(--shadow-light);
-      animation: fadeIn 0.3s ease;
-    }
-
+    .header img { max-height: 52px; margin-bottom: 10px; }
     .tab-container {
       display: flex;
       background: var(--bg);
       border-radius: 15px;
       padding: 6px;
       box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
-      margin-bottom: 25px;
+      margin-bottom: 22px;
     }
     .tab-btn {
       flex: 1;
@@ -88,7 +82,7 @@
       border-radius: 12px;
       padding: 14px;
       margin-top: 6px;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
       box-shadow: inset 4px 4px 7px var(--shadow-dark), inset -4px -4px 7px var(--shadow-light);
       outline: none;
       font-size: 14px;
@@ -107,85 +101,122 @@
       cursor: pointer;
       transition: all 0.15s ease;
     }
-    .neu-btn:hover {
-      box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
-    }
-    .neu-btn:active {
-      box-shadow: inset 4px 4px 7px var(--shadow-dark), inset -4px -4px 7px var(--shadow-light);
-    }
+    .neu-btn:hover { box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light); }
+    .neu-btn:active { box-shadow: inset 4px 4px 7px var(--shadow-dark), inset -4px -4px 7px var(--shadow-light); }
     .grid-2 { display: flex; gap: 12px; }
     .grid-2 > div { flex: 1; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* Side Announcement Container */
+    #sideNoticeContainer {
+      display: none;
+      width: 100%;
+      max-width: 320px;
+      background: var(--bg);
+      border-radius: 20px;
+      padding: 24px;
+      box-sizing: border-box;
+      box-shadow: 8px 8px 18px var(--shadow-dark), -8px -8px 18px var(--shadow-light);
+      border-left: 5px solid var(--amber);
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    /* Availability Notice Interlock Box */
+    .status-alert-box {
+      display: none;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      line-height: 1.4;
+      color: #991b1b;
+      animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
 
-<!-- Live SSD Office Notice Display -->
-<div id="noticeBanner">
-  <strong id="noticeTitle">Important Notice:</strong>
-  <div id="noticeBody" style="margin-top:4px;"></div>
-</div>
-
-<div class="neu-card">
-  <div class="header">
-    <img src="logo.png" alt="ICFAI Foundation for Higher Education" onerror="this.style.display='none'">
-    <h3 style="color:var(--primary); margin: 5px 0;">Student Service Department (SSD)</h3>
-    <p style="color:#64748b; font-size: 13px; margin:0;">Visitor Enquiry & Check-in Desk</p>
-  </div>
-
-  <div class="tab-container">
-    <button class="tab-btn active" id="tabStudent" type="button" onclick="switchTab('student')">Student Enquiry</button>
-    <button class="tab-btn" id="tabFaculty" type="button" onclick="switchTab('faculty')">Faculty Enquiry</button>
-  </div>
-
-  <!-- Student Form -->
-  <form id="studentForm">
-    <label style="font-size:13px; font-weight:600;">Enrollment Number</label>
-    <input type="text" id="stuEnroll" class="neu-input" placeholder="Type enrollment no..." oninput="lookupStudent()" required>
-
-    <label style="font-size:13px; font-weight:600;">Full Name</label>
-    <input type="text" id="stuName" class="neu-input" placeholder="Auto-populated / Editable" required>
-
-    <div class="grid-2">
-      <div>
-        <label style="font-size:13px; font-weight:600;">Section</label>
-        <input type="text" id="stuSec" class="neu-input" placeholder="e.g. A">
-      </div>
-      <div>
-        <label style="font-size:13px; font-weight:600;">Semester</label>
-        <input type="text" id="stuSem" class="neu-input" placeholder="e.g. 1st Sem">
-      </div>
+<div class="layout-wrapper">
+  
+  <!-- Left/Main Form Desk -->
+  <div class="neu-card">
+    <div class="header">
+      <img src="logo.png" alt="ICFAI Foundation for Higher Education" onerror="this.style.display='none'">
+      <h3 style="color:var(--primary); margin: 5px 0;">Student Service Department (SSD)</h3>
+      <p style="color:#64748b; font-size: 13px; margin:0;">Visitor Enquiry & Check-in Desk</p>
     </div>
 
-    <label style="font-size:13px; font-weight:600;">Select SSD Staff Member</label>
-    <select id="stuStaff" class="neu-select staffDropdown" required>
-      <option value="">-- Choose Staff Member --</option>
-      <option value="No Staff Available">No Staff Available</option>
-    </select>
+    <div class="tab-container">
+      <button class="tab-btn active" id="tabStudent" type="button" onclick="switchTab('student')">Student Enquiry</button>
+      <button class="tab-btn" id="tabFaculty" type="button" onclick="switchTab('faculty')">Faculty Enquiry</button>
+    </div>
 
-    <label style="font-size:13px; font-weight:600;">Reason for Visit / Query</label>
-    <textarea id="stuQuery" rows="3" class="neu-textarea" placeholder="State your enquiry briefly..." required></textarea>
+    <!-- Student Form -->
+    <form id="studentForm">
+      <label style="font-size:13px; font-weight:600;">Enrollment Number</label>
+      <input type="text" id="stuEnroll" class="neu-input" placeholder="Type enrollment no..." oninput="lookupStudent()" required>
 
-    <button type="submit" id="stuSubmitBtn" class="neu-btn">Submit Student Enquiry</button>
-  </form>
+      <label style="font-size:13px; font-weight:600;">Full Name</label>
+      <input type="text" id="stuName" class="neu-input" placeholder="Auto-populated / Editable" required>
 
-  <!-- Faculty Form -->
-  <form id="facultyForm" style="display:none;">
-    <label style="font-size:13px; font-weight:600;">Faculty Name</label>
-    <input type="text" id="facName" list="facList" class="neu-input" placeholder="Type or choose faculty name..." required>
-    <datalist id="facList"></datalist>
+      <div class="grid-2">
+        <div>
+          <label style="font-size:13px; font-weight:600;">Section</label>
+          <input type="text" id="stuSec" class="neu-input" placeholder="e.g. A">
+        </div>
+        <div>
+          <label style="font-size:13px; font-weight:600;">Semester</label>
+          <input type="text" id="stuSem" class="neu-input" placeholder="e.g. 1st Sem">
+        </div>
+      </div>
 
-    <label style="font-size:13px; font-weight:600;">Select SSD Staff Member</label>
-    <select id="facStaff" class="neu-select staffDropdown" required>
-      <option value="">-- Choose Staff Member --</option>
-      <option value="No Staff Available">No Staff Available</option>
-    </select>
+      <label style="font-size:13px; font-weight:600;">Select SSD Staff Member</label>
+      <select id="stuStaff" class="neu-select staffDropdown" onchange="checkStaffStatus('stuStaff', 'stuStatusAlert', 'stuSubmitBtn')" required>
+        <option value="">-- Choose Staff Member --</option>
+      </select>
 
-    <label style="font-size:13px; font-weight:600;">Brief Query</label>
-    <textarea id="facQuery" rows="3" class="neu-textarea" placeholder="State query briefly..." required></textarea>
+      <!-- Dynamic Staff Status Alert -->
+      <div id="stuStatusAlert" class="status-alert-box"></div>
 
-    <button type="submit" id="facSubmitBtn" class="neu-btn">Submit Faculty Enquiry</button>
-  </form>
+      <label style="font-size:13px; font-weight:600;">Reason for Visit / Query</label>
+      <textarea id="stuQuery" rows="3" class="neu-textarea" placeholder="State your enquiry briefly..." required></textarea>
+
+      <button type="submit" id="stuSubmitBtn" class="neu-btn">Submit Student Enquiry</button>
+    </form>
+
+    <!-- Faculty Form -->
+    <form id="facultyForm" style="display:none;">
+      <label style="font-size:13px; font-weight:600;">Faculty Name</label>
+      <input type="text" id="facName" list="facList" class="neu-input" placeholder="Type or select faculty name..." required>
+      <datalist id="facList"></datalist>
+
+      <label style="font-size:13px; font-weight:600;">Select SSD Staff Member</label>
+      <select id="facStaff" class="neu-select staffDropdown" onchange="checkStaffStatus('facStaff', 'facStatusAlert', 'facSubmitBtn')" required>
+        <option value="">-- Choose Staff Member --</option>
+      </select>
+
+      <!-- Dynamic Staff Status Alert -->
+      <div id="facStatusAlert" class="status-alert-box"></div>
+
+      <label style="font-size:13px; font-weight:600;">Brief Query</label>
+      <textarea id="facQuery" rows="3" class="neu-textarea" placeholder="State query briefly..." required></textarea>
+
+      <button type="submit" id="facSubmitBtn" class="neu-btn">Submit Faculty Enquiry</button>
+    </form>
+  </div>
+
+  <!-- Right-Pinned Announcement Widget -->
+  <div id="sideNoticeContainer">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+      <span style="font-size:18px;">📢</span>
+      <h4 id="sideNoticeTitle" style="margin:0; color:var(--primary); font-size:16px;">Notice Board</h4>
+    </div>
+    <div id="sideNoticeBody" style="font-size:13px; line-height:1.5; color:#334155;"></div>
+  </div>
+
 </div>
 
 <script>
@@ -201,8 +232,9 @@
   const db = firebase.firestore();
 
   let studentMap = {};
+  let staffStatusMap = {};
 
-  // 1. Ingest Static Fallback Files
+  // 1. Initial Load from Fallback Local Files
   fetch('Combined data Student List CSV.json').then(r => r.json()).then(data => {
     data.forEach(item => {
       if (item.Enrolno) {
@@ -228,27 +260,28 @@
     });
   }).catch(() => {});
 
-  // 2. Real-Time Directory Sync from Firestore (Uploaded via Settings)
+  // 2. Real-time Master Directory Sync from Firestore
   db.collection('directory').doc('master').onSnapshot(doc => {
     if (doc.exists) {
       const d = doc.data();
-      if (d.students) Object.assign(studentMap, d.students);
+      if (d.students) studentMap = Object.assign({}, studentMap, d.students);
       if (d.faculty && Array.isArray(d.faculty)) {
         const dl = document.getElementById('facList');
         dl.innerHTML = '';
-        d.faculty.forEach(name => {
+        d.faculty.forEach(n => {
           const opt = document.createElement('option');
-          opt.value = name;
+          opt.value = n;
           dl.appendChild(opt);
         });
       }
     }
   });
 
-  // 3. Dynamic SSD Staff List Real-Time Listener
+  // 3. Real-time Staff Directory & Availability States Sync
   db.collection('settings').doc('staffList').onSnapshot(doc => {
     const staffList = (doc.exists && doc.data().names) ? doc.data().names : ["Person 1", "Person 2", "Person 3", "Person 4", "Person 5"];
     document.querySelectorAll('.staffDropdown').forEach(sel => {
+      const prevVal = sel.value;
       sel.innerHTML = '<option value="">-- Choose Staff Member --</option>';
       staffList.forEach(p => {
         const opt = document.createElement('option');
@@ -260,20 +293,55 @@
       noStaffOpt.value = "No Staff Available";
       noStaffOpt.innerText = "No Staff Available";
       sel.appendChild(noStaffOpt);
+      if (prevVal) sel.value = prevVal;
     });
   });
 
-  // 4. Real-time Office Broadcast / Announcement Listener
-  db.collection('settings').doc('broadcast').onSnapshot(doc => {
-    const banner = document.getElementById('noticeBanner');
-    if (doc.exists && doc.data().active && doc.data().message) {
-      document.getElementById('noticeTitle').innerText = doc.data().title || "SSD Notice:";
-      document.getElementById('noticeBody').innerText = doc.data().message;
-      banner.style.display = 'block';
-    } else {
-      banner.style.display = 'none';
+  db.collection('settings').doc('staffAvailability').onSnapshot(doc => {
+    if (doc.exists) {
+      staffStatusMap = doc.data() || {};
+      checkStaffStatus('stuStaff', 'stuStatusAlert', 'stuSubmitBtn');
+      checkStaffStatus('facStaff', 'facStatusAlert', 'facSubmitBtn');
     }
   });
+
+  // 4. Real-time Side Announcement Widget Listener
+  db.collection('settings').doc('broadcast').onSnapshot(doc => {
+    const box = document.getElementById('sideNoticeContainer');
+    if (doc.exists && doc.data().active && doc.data().message) {
+      document.getElementById('sideNoticeTitle').innerText = doc.data().title || "Notice Board";
+      document.getElementById('sideNoticeBody').innerText = doc.data().message;
+      box.style.display = 'block';
+    } else {
+      box.style.display = 'none';
+    }
+  });
+
+  function checkStaffStatus(selectId, alertBoxId, submitBtnId) {
+    const staff = document.getElementById(selectId).value;
+    const alertBox = document.getElementById(alertBoxId);
+    const submitBtn = document.getElementById(submitBtnId);
+    if (!staff || staff === "No Staff Available") {
+      alertBox.style.display = 'none';
+      submitBtn.disabled = false;
+      return;
+    }
+
+    const state = staffStatusMap[staff] || 'Available';
+
+    if (state === 'Lunch Break' || state === 'In Meeting') {
+      alertBox.innerHTML = `<strong>Unavailable:</strong> ${staff} is currently <strong>${state.toLowerCase()}</strong>. Please visit after some time or select another staff member.`;
+      alertBox.style.display = 'block';
+      submitBtn.disabled = true;
+    } else if (state === 'On Leave') {
+      alertBox.innerHTML = `<strong>On Leave:</strong> ${staff} is on leave today. Please select another SSD staff member to submit your enquiry.`;
+      alertBox.style.display = 'block';
+      submitBtn.disabled = true;
+    } else {
+      alertBox.style.display = 'none';
+      submitBtn.disabled = false;
+    }
+  }
 
   function switchTab(type) {
     document.getElementById('studentForm').style.display = type === 'student' ? 'block' : 'none';
@@ -285,9 +353,9 @@
   function lookupStudent() {
     const v = document.getElementById('stuEnroll').value.trim().toUpperCase();
     if (studentMap[v]) {
-      document.getElementById('stuName').value = studentMap[v].name;
-      document.getElementById('stuSec').value = studentMap[v].sec;
-      document.getElementById('stuSem').value = studentMap[v].sem;
+      document.getElementById('stuName').value = studentMap[v].name || '';
+      document.getElementById('stuSec').value = studentMap[v].sec || '';
+      document.getElementById('stuSem').value = studentMap[v].sem || '';
     }
   }
 
@@ -307,12 +375,11 @@
       query: document.getElementById('stuQuery').value.trim(),
       status: 'Open',
       createdDate: new Date().toISOString()
-    })
-    .then(() => {
+    }).then(() => {
       alert('Enquiry logged successfully.');
       document.getElementById('studentForm').reset();
-    })
-    .catch(err => alert("Error submitting: " + err.message))
+      document.getElementById('stuStatusAlert').style.display = 'none';
+    }).catch(err => alert("Error: " + err.message))
     .finally(() => {
       btn.disabled = false;
       btn.innerText = "Submit Student Enquiry";
@@ -335,12 +402,11 @@
       query: document.getElementById('facQuery').value.trim(),
       status: 'Open',
       createdDate: new Date().toISOString()
-    })
-    .then(() => {
-      alert('Faculty inquiry registered.');
+    }).then(() => {
+      alert('Faculty enquiry registered.');
       document.getElementById('facultyForm').reset();
-    })
-    .catch(err => alert("Error submitting: " + err.message))
+      document.getElementById('facStatusAlert').style.display = 'none';
+    }).catch(err => alert("Error: " + err.message))
     .finally(() => {
       btn.disabled = false;
       btn.innerText = "Submit Faculty Enquiry";
