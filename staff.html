@@ -133,15 +133,6 @@
       box-shadow: 5px 5px 12px var(--dark-shadow), -5px -5px 12px var(--light-shadow);
       border-left: 5px solid var(--accent);
     }
-    .token-chip {
-      background: #1e3a8a;
-      color: #ffffff;
-      padding: 4px 10px;
-      border-radius: 8px;
-      font-weight: 800;
-      font-size: 13px;
-      letter-spacing: 0.5px;
-    }
     .repeat-badge {
       background: #fee2e2;
       color: var(--crimson);
@@ -154,8 +145,17 @@
       align-items: center;
       gap: 4px;
     }
+    .transfer-badge {
+      background: #eff6ff;
+      color: var(--accent);
+      border: 1px solid #bfdbfe;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+    }
 
-    #statusModal {
+    .modal-overlay {
       display: none;
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -261,7 +261,7 @@
 </div>
 
 <!-- Staff Availability Settings Modal -->
-<div id="statusModal">
+<div id="statusModal" class="modal-overlay">
   <div class="neu-card" style="max-width: 420px; width: 100%;">
     <h3 style="color:var(--primary); margin-top:0;">Desk Availability Settings</h3>
     <p style="font-size:13px; color:var(--subtext); margin-bottom:15px;">Set your current work status.</p>
@@ -281,6 +281,29 @@
   </div>
 </div>
 
+<!-- Desk Transfer Modal -->
+<div id="transferModal" class="modal-overlay">
+  <div class="neu-card" style="max-width: 440px; width: 100%;">
+    <h3 style="color:var(--primary); margin-top:0;">Reassign / Transfer Ticket</h3>
+    <p style="font-size:13px; color:var(--subtext); margin-bottom:14px;">
+      Forward this enquiry to another desk. It will instantly move to their queue.
+    </p>
+
+    <input type="hidden" id="transferDocId">
+    
+    <label style="font-size:13px; font-weight:600;">Transfer To Staff Member:</label>
+    <select id="transferTargetStaff" class="neu-inset" style="margin-top:6px; margin-bottom:14px;"></select>
+
+    <label style="font-size:13px; font-weight:600;">Transfer Notes / Reason (Optional):</label>
+    <textarea id="transferNotes" class="neu-inset" rows="2" placeholder="e.g. Requires scholarship clearance..."></textarea>
+
+    <div style="display:flex; gap:10px; margin-top:18px;">
+      <button onclick="executeTransfer()" type="button" class="neu-btn" style="flex:1; color:var(--accent);">Confirm Transfer</button>
+      <button onclick="closeTransferModal()" type="button" class="neu-btn" style="flex:1;">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyDv4W1ZgAC4r8Zo6v65qu0EEy6ea9O1lYk",
@@ -294,12 +317,13 @@
   const db = firebase.firestore();
 
   let activeStaff = '';
+  let fullStaffList = [];
 
   db.collection('settings').doc('staffList').onSnapshot(doc => {
-    const staffList = (doc.exists && doc.data().names) ? doc.data().names : ["Person 1", "Person 2", "Person 3", "Person 4", "Person 5"];
+    fullStaffList = (doc.exists && doc.data().names) ? doc.data().names : ["Person 1", "Person 2", "Person 3", "Person 4", "Person 5"];
     const sel = document.getElementById('staffSelect');
     sel.innerHTML = '<option value="">-- Choose Profile --</option>';
-    staffList.forEach(p => {
+    fullStaffList.forEach(p => {
       const opt = document.createElement('option');
       opt.value = p; opt.innerText = p;
       sel.appendChild(opt);
@@ -354,6 +378,41 @@
     });
   }
 
+  function openTransferModal(id) {
+    document.getElementById('transferDocId').value = id;
+    document.getElementById('transferNotes').value = '';
+    const targetSel = document.getElementById('transferTargetStaff');
+    targetSel.innerHTML = '';
+    fullStaffList.filter(s => s !== activeStaff).forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s; opt.innerText = s;
+      targetSel.appendChild(opt);
+    });
+    document.getElementById('transferModal').style.display = 'flex';
+  }
+
+  function closeTransferModal() {
+    document.getElementById('transferModal').style.display = 'none';
+  }
+
+  function executeTransfer() {
+    const id = document.getElementById('transferDocId').value;
+    const targetStaff = document.getElementById('transferTargetStaff').value;
+    const notes = document.getElementById('transferNotes').value.trim();
+
+    if (!targetStaff) return alert("Select target desk.");
+
+    db.collection('enquiries').doc(id).update({
+      assignedStaff: targetStaff,
+      transferredFrom: activeStaff,
+      transferredDate: new Date().toISOString(),
+      transferNotes: notes || 'Forwarded for resolution'
+    }).then(() => {
+      closeTransferModal();
+      alert(`Ticket transferred successfully to ${targetStaff}.`);
+    }).catch(err => alert("Transfer failed: " + err.message));
+  }
+
   function switchDeskTab(tab) {
     document.getElementById('studentSection').style.display = tab === 'student' ? 'block' : 'none';
     document.getElementById('facultySection').style.display = tab === 'faculty' ? 'block' : 'none';
@@ -371,6 +430,7 @@
       snapshot.forEach(doc => {
         const d = doc.data();
         const id = doc.id;
+        
         const isAssigned = (d.assignedStaff === activeStaff || d.assignedStaff === 'No Staff Available');
         const isOpen = (d.status === 'Open' || d.status === 'Open - Pending Action');
 
@@ -409,17 +469,16 @@
   function renderTicketCard(id, d, isFaculty) {
     const timeStr = d.createdDate ? new Date(d.createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently';
     const isBroadcast = d.assignedStaff === 'No Staff Available';
-    const token = d.tokenNumber || (isFaculty ? 'F-TK' : 'S-TK');
 
     return `
       <div class="ticket-row" style="border-left-color: ${isFaculty ? 'var(--crimson)' : 'var(--accent)'}">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
           <div>
             <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-              <span class="token-chip">${token}</span>
               <div style="font-size:16px; font-weight:700; color:var(--text);">${d.name}</div>
               ${isBroadcast ? '<span style="font-size:10px; font-weight:700; background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:6px;">OFFICE BROADCAST</span>' : ''}
-              ${d.isRepeatVisitor ? `<span class="repeat-badge">⚠️ Repeat Visit (${d.priorVisitCount} recent visits)</span>` : ''}
+              ${d.isRepeatVisitor ? `<span class="repeat-badge">Repeat Visit (${d.priorVisitCount} visits)</span>` : ''}
+              ${d.transferredFrom ? `<span class="transfer-badge">Transferred from ${d.transferredFrom}</span>` : ''}
             </div>
             <div style="font-size:13px; color:var(--subtext); margin-top:4px;">
               ${isFaculty ? 'Faculty Member' : `${d.enrollment || 'N/A'} • Section ${d.sec || 'N/A'} • ${d.sem || 'N/A'}`}
@@ -430,16 +489,20 @@
 
         <div style="background:#f1f5f9; padding:14px; border-radius:12px; margin:14px 0; font-size:14px; line-height:1.5; color:#334155;">
           ${d.query}
+          ${d.transferNotes ? `<div style="margin-top:8px; padding-top:8px; border-top:1px dashed #cbd5e1; font-size:12px; color:var(--accent);"><b>Transfer Note:</b> ${d.transferNotes}</div>` : ''}
         </div>
 
         <textarea id="sol_${id}" class="neu-inset" rows="2" placeholder="Enter resolution notes..."></textarea>
         
-        <div style="margin-top:12px; display:flex; gap:12px;">
+        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
           <button type="button" class="neu-btn" style="color:var(--green); flex:1;" onclick="resolveTicket('${id}', ${d.startTimestamp || 0})">
-            ✓ Resolve & Close
+            Resolve & Close
+          </button>
+          <button type="button" class="neu-btn" style="color:var(--accent); flex:1;" onclick="openTransferModal('${id}')">
+            Transfer Desk
           </button>
           <button type="button" class="neu-btn" style="color:var(--crimson); flex:1;" onclick="keepPending('${id}')">
-            ⏳ Keep Open
+            Keep Open
           </button>
         </div>
       </div>
