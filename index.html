@@ -120,7 +120,21 @@
       animation: fadeIn 0.4s ease-out;
     }
 
-    /* Availability Notice Interlock Box */
+    .notice-header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--amber);
+      background: #fef3c7;
+      padding: 4px 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
     .status-alert-box {
       display: none;
       background: #fef2f2;
@@ -141,7 +155,6 @@
 
 <div class="layout-wrapper">
   
-  <!-- Left/Main Form Desk -->
   <div class="neu-card">
     <div class="header">
       <img src="logo.png" alt="ICFAI Foundation for Higher Education" onerror="this.style.display='none'">
@@ -178,7 +191,6 @@
         <option value="">-- Choose Staff Member --</option>
       </select>
 
-      <!-- Dynamic Staff Status Alert -->
       <div id="stuStatusAlert" class="status-alert-box"></div>
 
       <label style="font-size:13px; font-weight:600;">Reason for Visit / Query</label>
@@ -198,7 +210,6 @@
         <option value="">-- Choose Staff Member --</option>
       </select>
 
-      <!-- Dynamic Staff Status Alert -->
       <div id="facStatusAlert" class="status-alert-box"></div>
 
       <label style="font-size:13px; font-weight:600;">Brief Query</label>
@@ -208,13 +219,14 @@
     </form>
   </div>
 
-  <!-- Right-Pinned Announcement Widget -->
+  <!-- Standard Institutional Announcement Card (Student View Only) -->
   <div id="sideNoticeContainer">
-    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-      <span style="font-size:18px;">📢</span>
-      <h4 id="sideNoticeTitle" style="margin:0; color:var(--primary); font-size:16px;">Notice Board</h4>
+    <div class="notice-header-badge">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+      Official Announcement
     </div>
-    <div id="sideNoticeBody" style="font-size:13px; line-height:1.5; color:#334155;"></div>
+    <h4 id="sideNoticeTitle" style="margin:0 0 8px 0; color:var(--primary); font-size:16px;">Notice Board</h4>
+    <div id="sideNoticeBody" style="font-size:13px; line-height:1.55; color:#334155;"></div>
   </div>
 
 </div>
@@ -232,9 +244,12 @@
   const db = firebase.firestore();
 
   let studentMap = {};
+  let facultyList = [];
   let staffStatusMap = {};
+  let noticeConfig = { active: false, title: '', message: '' };
+  let currentActiveTab = 'student';
 
-  // 1. Initial Load from Fallback Local Files
+  // 1. Initial Fallback Load from Files
   fetch('Combined data Student List CSV.json').then(r => r.json()).then(data => {
     data.forEach(item => {
       if (item.Enrolno) {
@@ -252,7 +267,8 @@
     const dl = document.getElementById('facList');
     data.forEach(item => {
       const n = (item["Faculty Name (Dr./Prof.)"] || "").trim();
-      if (n && n !== "VF") {
+      if (n && n !== "VF" && !facultyList.includes(n)) {
+        facultyList.push(n);
         const opt = document.createElement('option');
         opt.value = n;
         dl.appendChild(opt);
@@ -260,15 +276,16 @@
     });
   }).catch(() => {});
 
-  // 2. Real-time Master Directory Sync from Firestore
+  // 2. Real-time Directory Sync
   db.collection('directory').doc('master').onSnapshot(doc => {
     if (doc.exists) {
       const d = doc.data();
       if (d.students) studentMap = Object.assign({}, studentMap, d.students);
       if (d.faculty && Array.isArray(d.faculty)) {
+        facultyList = d.faculty;
         const dl = document.getElementById('facList');
         dl.innerHTML = '';
-        d.faculty.forEach(n => {
+        facultyList.forEach(n => {
           const opt = document.createElement('option');
           opt.value = n;
           dl.appendChild(opt);
@@ -277,23 +294,21 @@
     }
   });
 
-  // 3. Real-time Staff Directory & Availability States Sync
+  // 3. Staff Directory & Availability Listeners
   db.collection('settings').doc('staffList').onSnapshot(doc => {
     const staffList = (doc.exists && doc.data().names) ? doc.data().names : ["Person 1", "Person 2", "Person 3", "Person 4", "Person 5"];
     document.querySelectorAll('.staffDropdown').forEach(sel => {
-      const prevVal = sel.value;
+      const prev = sel.value;
       sel.innerHTML = '<option value="">-- Choose Staff Member --</option>';
       staffList.forEach(p => {
         const opt = document.createElement('option');
-        opt.value = p;
-        opt.innerText = p;
+        opt.value = p; opt.innerText = p;
         sel.appendChild(opt);
       });
-      const noStaffOpt = document.createElement('option');
-      noStaffOpt.value = "No Staff Available";
-      noStaffOpt.innerText = "No Staff Available";
-      sel.appendChild(noStaffOpt);
-      if (prevVal) sel.value = prevVal;
+      const noStaff = document.createElement('option');
+      noStaff.value = "No Staff Available"; noStaff.innerText = "No Staff Available";
+      sel.appendChild(noStaff);
+      if (prev) sel.value = prev;
     });
   });
 
@@ -305,17 +320,37 @@
     }
   });
 
-  // 4. Real-time Side Announcement Widget Listener
+  // 4. Side Notice Listener
   db.collection('settings').doc('broadcast').onSnapshot(doc => {
+    if (doc.exists) {
+      noticeConfig = {
+        active: !!doc.data().active,
+        title: doc.data().title || "Notice Board",
+        message: doc.data().message || ""
+      };
+      renderNoticeWidget();
+    }
+  });
+
+  function renderNoticeWidget() {
     const box = document.getElementById('sideNoticeContainer');
-    if (doc.exists && doc.data().active && doc.data().message) {
-      document.getElementById('sideNoticeTitle').innerText = doc.data().title || "Notice Board";
-      document.getElementById('sideNoticeBody').innerText = doc.data().message;
+    if (currentActiveTab === 'student' && noticeConfig.active && noticeConfig.message) {
+      document.getElementById('sideNoticeTitle').innerText = noticeConfig.title;
+      document.getElementById('sideNoticeBody').innerText = noticeConfig.message;
       box.style.display = 'block';
     } else {
       box.style.display = 'none';
     }
-  });
+  }
+
+  function switchTab(type) {
+    currentActiveTab = type;
+    document.getElementById('studentForm').style.display = type === 'student' ? 'block' : 'none';
+    document.getElementById('facultyForm').style.display = type === 'faculty' ? 'block' : 'none';
+    document.getElementById('tabStudent').classList.toggle('active', type === 'student');
+    document.getElementById('tabFaculty').classList.toggle('active', type === 'faculty');
+    renderNoticeWidget();
+  }
 
   function checkStaffStatus(selectId, alertBoxId, submitBtnId) {
     const staff = document.getElementById(selectId).value;
@@ -328,7 +363,6 @@
     }
 
     const state = staffStatusMap[staff] || 'Available';
-
     if (state === 'Lunch Break' || state === 'In Meeting') {
       alertBox.innerHTML = `<strong>Unavailable:</strong> ${staff} is currently <strong>${state.toLowerCase()}</strong>. Please visit after some time or select another staff member.`;
       alertBox.style.display = 'block';
@@ -343,13 +377,6 @@
     }
   }
 
-  function switchTab(type) {
-    document.getElementById('studentForm').style.display = type === 'student' ? 'block' : 'none';
-    document.getElementById('facultyForm').style.display = type === 'faculty' ? 'block' : 'none';
-    document.getElementById('tabStudent').classList.toggle('active', type === 'student');
-    document.getElementById('tabFaculty').classList.toggle('active', type === 'faculty');
-  }
-
   function lookupStudent() {
     const v = document.getElementById('stuEnroll').value.trim().toUpperCase();
     if (studentMap[v]) {
@@ -359,24 +386,37 @@
     }
   }
 
-  document.getElementById('studentForm').addEventListener('submit', function(e) {
+  document.getElementById('studentForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const btn = document.getElementById('stuSubmitBtn');
     btn.disabled = true;
     btn.innerText = "Transmitting...";
 
+    const enr = document.getElementById('stuEnroll').value.trim().toUpperCase();
+    const name = document.getElementById('stuName').value.trim();
+    const sec = document.getElementById('stuSec').value.trim();
+    const sem = document.getElementById('stuSem').value.trim();
+
+    // Auto-update student master directory if newly entered or modified
+    if (!studentMap[enr] || studentMap[enr].name !== name) {
+      studentMap[enr] = { name: name, sec: sec, sem: sem };
+      db.collection('directory').doc('master').set({
+        students: { [enr]: { name: name, sec: sec, sem: sem } }
+      }, { merge: true }).catch(() => {});
+    }
+
     db.collection('enquiries').add({
       type: 'Student',
-      enrollment: document.getElementById('stuEnroll').value.trim().toUpperCase(),
-      name: document.getElementById('stuName').value.trim(),
-      sec: document.getElementById('stuSec').value.trim(),
-      sem: document.getElementById('stuSem').value.trim(),
+      enrollment: enr,
+      name: name,
+      sec: sec,
+      sem: sem,
       assignedStaff: document.getElementById('stuStaff').value,
       query: document.getElementById('stuQuery').value.trim(),
       status: 'Open',
       createdDate: new Date().toISOString()
     }).then(() => {
-      alert('Enquiry logged successfully.');
+      alert('Enquiry submitted successfully.');
       document.getElementById('studentForm').reset();
       document.getElementById('stuStatusAlert').style.display = 'none';
     }).catch(err => alert("Error: " + err.message))
@@ -386,16 +426,26 @@
     });
   });
 
-  document.getElementById('facultyForm').addEventListener('submit', function(e) {
+  document.getElementById('facultyForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const btn = document.getElementById('facSubmitBtn');
     btn.disabled = true;
     btn.innerText = "Transmitting...";
 
+    const facName = document.getElementById('facName').value.trim();
+
+    // Auto-update faculty master directory if a new name is entered
+    if (facName && !facultyList.includes(facName)) {
+      facultyList.push(facName);
+      db.collection('directory').doc('master').set({
+        faculty: firebase.firestore.FieldValue.arrayUnion(facName)
+      }, { merge: true }).catch(() => {});
+    }
+
     db.collection('enquiries').add({
       type: 'Faculty',
       enrollment: 'FACULTY',
-      name: document.getElementById('facName').value.trim(),
+      name: facName,
       sec: '',
       sem: '',
       assignedStaff: document.getElementById('facStaff').value,
