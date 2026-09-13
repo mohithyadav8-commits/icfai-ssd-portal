@@ -58,12 +58,8 @@
       color: var(--primary);
       transition: all 0.2s ease;
     }
-    .neu-btn:hover {
-      box-shadow: 6px 6px 14px var(--dark-shadow), -6px -6px 14px var(--light-shadow);
-    }
-    .neu-btn:active {
-      box-shadow: inset 3px 3px 6px var(--dark-shadow), inset -3px -3px 6px var(--light-shadow);
-    }
+    .neu-btn:hover { box-shadow: 6px 6px 14px var(--dark-shadow), -6px -6px 14px var(--light-shadow); }
+    .neu-btn:active { box-shadow: inset 3px 3px 6px var(--dark-shadow), inset -3px -3px 6px var(--light-shadow); }
     .kpi-row {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -76,25 +72,9 @@
       padding: 18px 20px;
       box-shadow: 6px 6px 14px var(--dark-shadow), -6px -6px 14px var(--light-shadow);
       cursor: pointer;
-      transition: transform 0.15s ease;
     }
-    .kpi-card:active {
-      transform: scale(0.98);
-    }
-    .kpi-card .label {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--subtext);
-      letter-spacing: 0.5px;
-    }
-    .kpi-card .val {
-      font-size: 30px;
-      font-weight: 800;
-      margin-top: 6px;
-      color: var(--primary);
-    }
-
-    /* Tab Switcher */
+    .kpi-card .label { font-size: 12px; font-weight: 700; color: var(--subtext); }
+    .kpi-card .val { font-size: 30px; font-weight: 800; margin-top: 6px; color: var(--primary); }
     .tab-bar {
       display: flex;
       gap: 15px;
@@ -126,33 +106,17 @@
       color: var(--primary);
       box-shadow: 4px 4px 10px var(--dark-shadow), -4px -4px 10px var(--light-shadow);
     }
-
-    /* Stationary Blink Glow for Faculty Priority (No Shaking or Movement) */
     @keyframes steadyGlowPulse {
-      0% {
-        box-shadow: 0 0 4px rgba(220, 38, 38, 0.3);
-        background: #fee2e2;
-      }
-      50% {
-        box-shadow: 0 0 16px rgba(220, 38, 38, 0.7);
-        background: #fecaca;
-      }
-      100% {
-        box-shadow: 0 0 4px rgba(220, 38, 38, 0.3);
-        background: #fee2e2;
-      }
+      0% { box-shadow: 0 0 4px rgba(220, 38, 38, 0.3); background: #fee2e2; }
+      50% { box-shadow: 0 0 16px rgba(220, 38, 38, 0.7); background: #fecaca; }
+      100% { box-shadow: 0 0 4px rgba(220, 38, 38, 0.3); background: #fee2e2; }
     }
     .glow-alert {
       color: var(--crimson) !important;
       animation: steadyGlowPulse 1.8s infinite ease-in-out;
       border: 1px solid rgba(220, 38, 38, 0.3);
     }
-    .counter-badge {
-      padding: 3px 9px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 700;
-    }
+    .counter-badge { padding: 3px 9px; border-radius: 20px; font-size: 12px; font-weight: 700; }
     .ticket-row {
       background: var(--bg);
       border-radius: 16px;
@@ -165,18 +129,12 @@
 </head>
 <body>
 
-<!-- Login / Profile Selection Screen -->
 <div class="neu-card" id="loginBox" style="max-width: 440px; margin: 60px auto; text-align: center;">
   <h2 style="color:var(--primary); margin-bottom: 8px;">SSD Staff Portal</h2>
-  <p style="color:var(--subtext); font-size:14px; margin-top:0;">Select your desk profile to access assigned queues</p>
+  <p style="color:var(--subtext); font-size:14px; margin-top:0;">Select your desk profile</p>
   
   <select id="staffSelect" class="neu-inset" style="margin-top: 15px;">
-    <option value="">-- Select Desk Identity --</option>
-    <option value="Person 1">Person 1</option>
-    <option value="Person 2">Person 2</option>
-    <option value="Person 3">Person 3</option>
-    <option value="Person 4">Person 4</option>
-    <option value="Person 5">Person 5</option>
+    <option value="">-- Synchronizing Profiles... --</option>
   </select>
   
   <button onclick="loginStaff()" type="button" class="neu-btn" style="width: 100%; margin-top: 22px; color:var(--accent);">
@@ -184,21 +142,15 @@
   </button>
 </div>
 
-<!-- Main Desk Interface -->
 <div id="deskView" style="display:none; max-width: 1000px; margin: auto;">
-  
-  <!-- Header Bar -->
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
     <div>
       <h2 id="staffHeader" style="color:var(--primary); margin:0;">Staff Dashboard</h2>
-      <span style="font-size: 13px; color:var(--subtext);">Real-time Firebase Synchronization Active</span>
+      <span style="font-size: 13px; color:var(--subtext);">Real-time Sync Active</span>
     </div>
-    <button onclick="location.reload()" type="button" class="neu-btn">
-      Switch User
-    </button>
+    <button onclick="location.reload()" type="button" class="neu-btn">Switch User</button>
   </div>
 
-  <!-- Top Metrics Bar -->
   <div class="kpi-row">
     <div class="kpi-card" onclick="switchDeskTab('student')">
       <div class="label">OPEN STUDENT QUERIES</div>
@@ -214,7 +166,6 @@
     </div>
   </div>
 
-  <!-- Tab Toggle -->
   <div class="tab-bar">
     <button class="tab-item active" id="btnStudentTab" type="button" onclick="switchDeskTab('student')">
       <span>Student Queue</span>
@@ -226,18 +177,16 @@
     </button>
   </div>
 
-  <!-- Student Queue Container -->
   <div id="studentSection" class="neu-card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 18px; border-bottom: 1px solid #cbd5e1; padding-bottom: 10px;">
       <h3 style="margin:0; color:var(--primary);">Active Student Enquiries</h3>
-      <span style="font-size:13px; color:var(--subtext);">First-in First-out Desk Queue</span>
+      <span style="font-size:13px; color:var(--subtext);">First-in First-out Queue</span>
     </div>
     <div id="studentListContainer">
       <p style="color:#94a3b8; text-align:center; padding:30px 0;">No pending student enquiries.</p>
     </div>
   </div>
 
-  <!-- Faculty Queue Container -->
   <div id="facultySection" class="neu-card" style="display:none;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 18px; border-bottom: 1px solid #cbd5e1; padding-bottom: 10px;">
       <h3 style="margin:0; color:var(--crimson);">Faculty Direct Inquiries</h3>
@@ -247,7 +196,6 @@
       <p style="color:#94a3b8; text-align:center; padding:30px 0;">No pending faculty enquiries.</p>
     </div>
   </div>
-
 </div>
 
 <script>
@@ -263,14 +211,23 @@
   const db = firebase.firestore();
 
   let activeStaff = '';
-  let activeTab = 'student';
+
+  // Synchronize Staff Login Dropdown directly with Firestore Settings
+  db.collection('settings').doc('staffList').onSnapshot(doc => {
+    const staffList = (doc.exists && doc.data().names) ? doc.data().names : ["Person 1", "Person 2", "Person 3", "Person 4", "Person 5"];
+    const sel = document.getElementById('staffSelect');
+    sel.innerHTML = '<option value="">-- Choose Profile --</option>';
+    staffList.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p;
+      opt.innerText = p;
+      sel.appendChild(opt);
+    });
+  });
 
   function loginStaff() {
     activeStaff = document.getElementById('staffSelect').value;
-    if (!activeStaff) {
-      alert('Please select your staff identity.');
-      return;
-    }
+    if (!activeStaff) return alert('Select staff profile');
     document.getElementById('loginBox').style.display = 'none';
     document.getElementById('deskView').style.display = 'block';
     document.getElementById('staffHeader').innerText = "Workstation: " + activeStaff;
@@ -278,7 +235,6 @@
   }
 
   function switchDeskTab(tab) {
-    activeTab = tab;
     document.getElementById('studentSection').style.display = tab === 'student' ? 'block' : 'none';
     document.getElementById('facultySection').style.display = tab === 'faculty' ? 'block' : 'none';
     document.getElementById('btnStudentTab').classList.toggle('active', tab === 'student');
@@ -309,17 +265,14 @@
         }
       });
 
-      // Update counters
       document.getElementById('studentCount').innerText = stuCount;
       document.getElementById('facultyCount').innerText = facCount;
       document.getElementById('totalCount').innerText = stuCount + facCount;
       document.getElementById('badgeStudent').innerText = stuCount;
       document.getElementById('badgeFaculty').innerText = facCount;
 
-      // Stationary Glow Alert when Faculty Query arrives
       const facTabBtn = document.getElementById('btnFacultyTab');
       const facKpiCard = document.getElementById('facKpiCard');
-
       if (facCount > 0) {
         facTabBtn.classList.add('glow-alert');
         facKpiCard.classList.add('glow-alert');
@@ -346,20 +299,13 @@
           </div>
           <span style="font-size:12px; font-weight:600; color:var(--subtext); background:#e2e8f0; padding:3px 9px; border-radius:8px;">${timeStr}</span>
         </div>
-
         <div style="background:#f1f5f9; padding:14px; border-radius:12px; margin:14px 0; font-size:14px; line-height:1.5; color:#334155;">
           ${d.query}
         </div>
-
         <textarea id="sol_${id}" class="neu-inset" rows="2" placeholder="Enter resolution notes..."></textarea>
-        
         <div style="margin-top:12px; display:flex; gap:12px;">
-          <button type="button" class="neu-btn" style="color:var(--green); flex:1;" onclick="resolveTicket('${id}')">
-            Resolve & Close
-          </button>
-          <button type="button" class="neu-btn" style="color:var(--crimson); flex:1;" onclick="keepPending('${id}')">
-            Keep Open
-          </button>
+          <button type="button" class="neu-btn" style="color:var(--green); flex:1;" onclick="resolveTicket('${id}')">Resolve & Close</button>
+          <button type="button" class="neu-btn" style="color:var(--crimson); flex:1;" onclick="keepPending('${id}')">Keep Open</button>
         </div>
       </div>
     `;
@@ -368,7 +314,6 @@
   function resolveTicket(id) {
     const sol = document.getElementById('sol_' + id).value.trim();
     if (!sol && !confirm("No remarks entered. Close ticket anyway?")) return;
-
     db.collection('enquiries').doc(id).update({
       status: 'Resolved',
       solution: sol || 'Resolved without remarks',
