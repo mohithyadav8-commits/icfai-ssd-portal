@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>SSD Staff Workstation</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
   <style>
@@ -16,127 +15,151 @@
       --accent: #2563eb;
       --crimson: #dc2626;
       --green: #16a34a;
+      --text: #1e293b;
+      --subtext: #64748b;
     }
     body {
       background: var(--bg);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       margin: 0;
       padding: 30px 20px;
-      color: #1e293b;
+      color: var(--text);
       min-height: 100vh;
       box-sizing: border-box;
     }
-
-    /* Tactile Neumorphism Foundations */
     .neu-card {
       background: var(--bg);
       border-radius: 20px;
-      box-shadow: 10px 10px 20px var(--dark-shadow), -10px -10px 20px var(--light-shadow);
+      box-shadow: 8px 8px 18px var(--dark-shadow), -8px -8px 18px var(--light-shadow);
       padding: 24px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      animation: fadeIn 0.4s ease-out;
+      margin-bottom: 24px;
     }
     .neu-inset {
       background: var(--bg);
       border: none;
-      border-radius: 14px;
-      padding: 14px 18px;
+      border-radius: 12px;
+      padding: 12px 16px;
       box-shadow: inset 4px 4px 8px var(--dark-shadow), inset -4px -4px 8px var(--light-shadow);
       outline: none;
       font-size: 14px;
       width: 100%;
       box-sizing: border-box;
-      color: #1e293b;
+      color: var(--text);
     }
     .neu-btn {
       border: none;
       border-radius: 12px;
-      padding: 12px 22px;
+      padding: 12px 20px;
       background: var(--bg);
-      box-shadow: 5px 5px 10px var(--dark-shadow), -5px -5px 10px var(--light-shadow);
+      box-shadow: 4px 4px 10px var(--dark-shadow), -4px -4px 10px var(--light-shadow);
       cursor: pointer;
       font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.15s ease;
+      font-size: 14px;
+      color: var(--primary);
+      transition: all 0.2s ease;
     }
     .neu-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 7px 7px 14px var(--dark-shadow), -7px -7px 14px var(--light-shadow);
+      box-shadow: 6px 6px 14px var(--dark-shadow), -6px -6px 14px var(--light-shadow);
     }
     .neu-btn:active {
-      transform: translateY(0);
       box-shadow: inset 3px 3px 6px var(--dark-shadow), inset -3px -3px 6px var(--light-shadow);
     }
-
-    /* Glowing Pulsing Beacon for Faculty Emergencies */
-    @keyframes pulseAlert {
-      0% {
-        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
-        transform: scale(1);
-      }
-      70% {
-        box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
-        transform: scale(1.03);
-      }
-      100% {
-        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
-        transform: scale(1);
-      }
-    }
-    .faculty-alert-pulse {
-      background: #fee2e2 !important;
-      border: 1px solid #f87171;
-      animation: pulseAlert 1.6s infinite ease-in-out;
-    }
-
-    /* Grid Layouts */
-    .dashboard-grid {
+    .kpi-row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 25px;
-      margin-top: 25px;
-    }
-    @media (max-width: 900px) {
-      .dashboard-grid { grid-template-columns: 1fr; }
-    }
-
-    .kpi-bar {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 15px;
-      margin-bottom: 25px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
     }
     .kpi-card {
       background: var(--bg);
-      padding: 18px 20px;
       border-radius: 16px;
+      padding: 18px 20px;
       box-shadow: 6px 6px 14px var(--dark-shadow), -6px -6px 14px var(--light-shadow);
-      display: flex;
-      flex-direction: column;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .kpi-card:active {
+      transform: scale(0.98);
+    }
+    .kpi-card .label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--subtext);
+      letter-spacing: 0.5px;
     }
     .kpi-card .val {
-      font-size: 28px;
+      font-size: 30px;
       font-weight: 800;
       margin-top: 6px;
       color: var(--primary);
     }
 
-    /* Section Tabs */
-    .column-header {
+    /* Tab Switcher */
+    .tab-bar {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      background: var(--bg);
+      padding: 6px;
+      border-radius: 16px;
+      box-shadow: inset 4px 4px 8px var(--dark-shadow), inset -4px -4px 8px var(--light-shadow);
+    }
+    .tab-item {
+      flex: 1;
+      padding: 14px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--subtext);
+      border-radius: 12px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      transition: all 0.25s ease;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      border-bottom: 2px solid #cbd5e1;
-      padding-bottom: 12px;
-      margin-bottom: 18px;
+      justify-content: center;
+      gap: 10px;
+    }
+    .tab-item.active {
+      background: var(--bg);
+      color: var(--primary);
+      box-shadow: 4px 4px 10px var(--dark-shadow), -4px -4px 10px var(--light-shadow);
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    /* Stationary Blink Glow for Faculty Priority (No Shaking or Movement) */
+    @keyframes steadyGlowPulse {
+      0% {
+        box-shadow: 0 0 4px rgba(220, 38, 38, 0.3);
+        background: #fee2e2;
+      }
+      50% {
+        box-shadow: 0 0 16px rgba(220, 38, 38, 0.7);
+        background: #fecaca;
+      }
+      100% {
+        box-shadow: 0 0 4px rgba(220, 38, 38, 0.3);
+        background: #fee2e2;
+      }
+    }
+    .glow-alert {
+      color: var(--crimson) !important;
+      animation: steadyGlowPulse 1.8s infinite ease-in-out;
+      border: 1px solid rgba(220, 38, 38, 0.3);
+    }
+    .counter-badge {
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .ticket-row {
+      background: var(--bg);
+      border-radius: 16px;
+      padding: 22px;
+      margin-bottom: 18px;
+      box-shadow: 5px 5px 12px var(--dark-shadow), -5px -5px 12px var(--light-shadow);
+      border-left: 5px solid var(--accent);
     }
   </style>
 </head>
@@ -144,11 +167,11 @@
 
 <!-- Login / Profile Selection Screen -->
 <div class="neu-card" id="loginBox" style="max-width: 440px; margin: 60px auto; text-align: center;">
-  <h2 style="color:var(--primary); margin-bottom: 8px;">SSD Staff Terminal</h2>
-  <p style="color:#64748b; font-size:14px; margin-top:0;">Access your real-time desk assignment queue</p>
+  <h2 style="color:var(--primary); margin-bottom: 8px;">SSD Staff Portal</h2>
+  <p style="color:var(--subtext); font-size:14px; margin-top:0;">Select your desk profile to access assigned queues</p>
   
   <select id="staffSelect" class="neu-inset" style="margin-top: 15px;">
-    <option value="">-- Choose Profile --</option>
+    <option value="">-- Select Desk Identity --</option>
     <option value="Person 1">Person 1</option>
     <option value="Person 2">Person 2</option>
     <option value="Person 3">Person 3</option>
@@ -156,71 +179,75 @@
     <option value="Person 5">Person 5</option>
   </select>
   
-  <button onclick="loginStaff()" type="button" class="neu-btn" style="width: 100%; margin-top: 20px; color:var(--accent);">
+  <button onclick="loginStaff()" type="button" class="neu-btn" style="width: 100%; margin-top: 22px; color:var(--accent);">
     Open Workstation
   </button>
 </div>
 
-<!-- Main Split Desk Interface -->
-<div id="deskView" style="display:none; max-width: 1280px; margin: auto;">
+<!-- Main Desk Interface -->
+<div id="deskView" style="display:none; max-width: 1000px; margin: auto;">
   
   <!-- Header Bar -->
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
     <div>
-      <h2 id="staffHeader" style="color:var(--primary); margin:0;">Desk Terminal</h2>
-      <span style="font-size: 13px; color:#64748b;">Live Firebase Firestore Sync Connected</span>
+      <h2 id="staffHeader" style="color:var(--primary); margin:0;">Staff Dashboard</h2>
+      <span style="font-size: 13px; color:var(--subtext);">Real-time Firebase Synchronization Active</span>
     </div>
     <button onclick="location.reload()" type="button" class="neu-btn">
       Switch User
     </button>
   </div>
 
-  <!-- Realtime Desk Top Counters -->
-  <div class="kpi-bar">
-    <div class="kpi-card">
-      <span style="font-size: 12px; font-weight:700; color:#64748b;">TOTAL QUEUE OPEN</span>
-      <div class="val" id="totalQueueCount">0</div>
+  <!-- Top Metrics Bar -->
+  <div class="kpi-row">
+    <div class="kpi-card" onclick="switchDeskTab('student')">
+      <div class="label">OPEN STUDENT QUERIES</div>
+      <div class="val" id="studentCount" style="color:var(--accent);">0</div>
+    </div>
+    <div class="kpi-card" id="facKpiCard" onclick="switchDeskTab('faculty')">
+      <div class="label">OPEN FACULTY QUERIES</div>
+      <div class="val" id="facultyCount" style="color:var(--crimson);">0</div>
     </div>
     <div class="kpi-card">
-      <span style="font-size: 12px; font-weight:700; color:#64748b;">STUDENT QUERIES</span>
-      <div class="val" id="studentQueueCount" style="color:var(--accent);">0</div>
-    </div>
-    <div class="kpi-card" id="facKpiCard">
-      <span style="font-size: 12px; font-weight:700; color:#64748b;">FACULTY QUERIES</span>
-      <div class="val" id="facultyQueueCount" style="color:var(--crimson);">0</div>
+      <div class="label">TOTAL PENDING</div>
+      <div class="val" id="totalCount">0</div>
     </div>
   </div>
 
-  <!-- Split Grid: Students vs Faculty -->
-  <div class="dashboard-grid">
-    
-    <!-- LEFT: Student Queue -->
-    <div class="neu-card">
-      <div class="column-header">
-        <h3 style="margin:0; color:var(--primary); display:flex; align-items:center; gap:8px;">
-          👨‍🎓 Student Enquiries
-        </h3>
-        <span id="studentBadge" style="background:#e2e8f0; padding:4px 10px; border-radius:12px; font-weight:700; font-size:12px; box-shadow: inset 2px 2px 4px var(--dark-shadow), inset -2px -2px 4px var(--light-shadow);">0 Active</span>
-      </div>
-      <div id="studentContainer">
-        <p style="color:#94a3b8; text-align:center; padding:30px 0;">No active student inquiries.</p>
-      </div>
-    </div>
-
-    <!-- RIGHT: Faculty Queue (With Alerting System) -->
-    <div class="neu-card" id="facSectionCard">
-      <div class="column-header">
-        <h3 style="margin:0; color:var(--crimson); display:flex; align-items:center; gap:8px;">
-          👨‍🏫 Faculty Enquiries
-        </h3>
-        <span id="facultyBadge" style="background:#fee2e2; color:var(--crimson); padding:4px 10px; border-radius:12px; font-weight:700; font-size:12px; box-shadow: 2px 2px 5px var(--dark-shadow);">0 Active</span>
-      </div>
-      <div id="facultyContainer">
-        <p style="color:#94a3b8; text-align:center; padding:30px 0;">No active faculty inquiries.</p>
-      </div>
-    </div>
-
+  <!-- Tab Toggle -->
+  <div class="tab-bar">
+    <button class="tab-item active" id="btnStudentTab" type="button" onclick="switchDeskTab('student')">
+      <span>Student Queue</span>
+      <span class="counter-badge" id="badgeStudent" style="background:#dbeafe; color:var(--accent);">0</span>
+    </button>
+    <button class="tab-item" id="btnFacultyTab" type="button" onclick="switchDeskTab('faculty')">
+      <span>Faculty Inquiries</span>
+      <span class="counter-badge" id="badgeFaculty" style="background:#fee2e2; color:var(--crimson);">0</span>
+    </button>
   </div>
+
+  <!-- Student Queue Container -->
+  <div id="studentSection" class="neu-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 18px; border-bottom: 1px solid #cbd5e1; padding-bottom: 10px;">
+      <h3 style="margin:0; color:var(--primary);">Active Student Enquiries</h3>
+      <span style="font-size:13px; color:var(--subtext);">First-in First-out Desk Queue</span>
+    </div>
+    <div id="studentListContainer">
+      <p style="color:#94a3b8; text-align:center; padding:30px 0;">No pending student enquiries.</p>
+    </div>
+  </div>
+
+  <!-- Faculty Queue Container -->
+  <div id="facultySection" class="neu-card" style="display:none;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 18px; border-bottom: 1px solid #cbd5e1; padding-bottom: 10px;">
+      <h3 style="margin:0; color:var(--crimson);">Faculty Direct Inquiries</h3>
+      <span style="font-size:13px; color:var(--subtext);">High Priority Staff Line</span>
+    </div>
+    <div id="facultyListContainer">
+      <p style="color:#94a3b8; text-align:center; padding:30px 0;">No pending faculty enquiries.</p>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -236,6 +263,7 @@
   const db = firebase.firestore();
 
   let activeStaff = '';
+  let activeTab = 'student';
 
   function loginStaff() {
     activeStaff = document.getElementById('staffSelect').value;
@@ -246,88 +274,91 @@
     document.getElementById('loginBox').style.display = 'none';
     document.getElementById('deskView').style.display = 'block';
     document.getElementById('staffHeader').innerText = "Workstation: " + activeStaff;
-    listenToDeskQueue();
+    listenToQueue();
   }
 
-  function listenToDeskQueue() {
+  function switchDeskTab(tab) {
+    activeTab = tab;
+    document.getElementById('studentSection').style.display = tab === 'student' ? 'block' : 'none';
+    document.getElementById('facultySection').style.display = tab === 'faculty' ? 'block' : 'none';
+    document.getElementById('btnStudentTab').classList.toggle('active', tab === 'student');
+    document.getElementById('btnFacultyTab').classList.toggle('active', tab === 'faculty');
+  }
+
+  function listenToQueue() {
     db.collection('enquiries').onSnapshot(snapshot => {
-      const stuContainer = document.getElementById('studentContainer');
-      const facContainer = document.getElementById('facultyContainer');
-      
-      let stuListHTML = '';
-      let facListHTML = '';
-      
+      let stuHTML = '';
+      let facHTML = '';
       let stuCount = 0;
       let facCount = 0;
 
       snapshot.forEach(doc => {
         const d = doc.data();
         const id = doc.id;
-
         const isAssigned = (d.assignedStaff === activeStaff || d.assignedStaff === 'No Staff Available');
         const isOpen = (d.status === 'Open' || d.status === 'Open - Pending Action');
 
         if (isAssigned && isOpen) {
           if (d.type === 'Faculty') {
             facCount++;
-            facListHTML += renderCard(id, d, true);
+            facHTML += renderTicketCard(id, d, true);
           } else {
             stuCount++;
-            stuListHTML += renderCard(id, d, false);
+            stuHTML += renderTicketCard(id, d, false);
           }
         }
       });
 
       // Update counters
-      document.getElementById('totalQueueCount').innerText = stuCount + facCount;
-      document.getElementById('studentQueueCount').innerText = stuCount;
-      document.getElementById('facultyQueueCount').innerText = facCount;
-      document.getElementById('studentBadge').innerText = stuCount + " Active";
-      document.getElementById('facultyBadge').innerText = facCount + " Active";
+      document.getElementById('studentCount').innerText = stuCount;
+      document.getElementById('facultyCount').innerText = facCount;
+      document.getElementById('totalCount').innerText = stuCount + facCount;
+      document.getElementById('badgeStudent').innerText = stuCount;
+      document.getElementById('badgeFaculty').innerText = facCount;
 
-      // Toggle live red blinking beacon if faculty inquiries exist
-      const facCard = document.getElementById('facSectionCard');
-      const facKpi = document.getElementById('facKpiCard');
+      // Stationary Glow Alert when Faculty Query arrives
+      const facTabBtn = document.getElementById('btnFacultyTab');
+      const facKpiCard = document.getElementById('facKpiCard');
+
       if (facCount > 0) {
-        facCard.classList.add('faculty-alert-pulse');
-        facKpi.classList.add('faculty-alert-pulse');
+        facTabBtn.classList.add('glow-alert');
+        facKpiCard.classList.add('glow-alert');
       } else {
-        facCard.classList.remove('faculty-alert-pulse');
-        facKpi.classList.remove('faculty-alert-pulse');
+        facTabBtn.classList.remove('glow-alert');
+        facKpiCard.classList.remove('glow-alert');
       }
 
-      stuContainer.innerHTML = stuListHTML || '<p style="color:#94a3b8; text-align:center; padding:30px 0;">No active student inquiries.</p>';
-      facContainer.innerHTML = facListHTML || '<p style="color:#94a3b8; text-align:center; padding:30px 0;">No active faculty inquiries.</p>';
+      document.getElementById('studentListContainer').innerHTML = stuHTML || '<p style="color:#94a3b8; text-align:center; padding:30px 0;">No pending student enquiries.</p>';
+      document.getElementById('facultyListContainer').innerHTML = facHTML || '<p style="color:#94a3b8; text-align:center; padding:30px 0;">No pending faculty enquiries.</p>';
     });
   }
 
-  function renderCard(id, d, isFaculty) {
+  function renderTicketCard(id, d, isFaculty) {
     const timeStr = d.createdDate ? new Date(d.createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently';
     return `
-      <div class="neu-card" style="margin-bottom: 16px; padding: 18px; border-left: 4px solid ${isFaculty ? 'var(--crimson)' : 'var(--accent)'}">
+      <div class="ticket-row" style="border-left-color: ${isFaculty ? 'var(--crimson)' : 'var(--accent)'}">
         <div style="display:flex; justify-content:space-between; align-items:flex-start;">
           <div>
-            <b style="font-size:15px; color:#0f172a;">${d.name}</b>
-            ${!isFaculty && d.enrollment ? `<span style="font-size:12px; color:#64748b; margin-left:6px;">(${d.enrollment})</span>` : ''}
-            <div style="font-size:12px; color:#64748b; margin-top:2px;">
-              ${isFaculty ? 'Faculty Member' : `${d.sec || ''} • ${d.sem || ''}`}
+            <div style="font-size:16px; font-weight:700; color:var(--text);">${d.name}</div>
+            <div style="font-size:13px; color:var(--subtext); margin-top:2px;">
+              ${isFaculty ? 'Faculty Inquirer' : `${d.enrollment || 'N/A'} • Section ${d.sec || 'N/A'} • ${d.sem || 'N/A'}`}
             </div>
           </div>
-          <span style="font-size:11px; background:#e2e8f0; padding:2px 8px; border-radius:8px; font-weight:600;">${timeStr}</span>
+          <span style="font-size:12px; font-weight:600; color:var(--subtext); background:#e2e8f0; padding:3px 9px; border-radius:8px;">${timeStr}</span>
         </div>
 
-        <div style="background:#f1f5f9; padding:12px; border-radius:10px; margin: 12px 0; font-size:13px; line-height:1.5; color:#334155;">
+        <div style="background:#f1f5f9; padding:14px; border-radius:12px; margin:14px 0; font-size:14px; line-height:1.5; color:#334155;">
           ${d.query}
         </div>
 
-        <textarea id="sol_${id}" class="neu-inset" rows="2" placeholder="Record resolution actions..." style="font-size:13px;"></textarea>
+        <textarea id="sol_${id}" class="neu-inset" rows="2" placeholder="Enter resolution notes..."></textarea>
         
-        <div style="margin-top:10px; display:flex; gap:10px;">
-          <button type="button" class="neu-btn" style="color:var(--green); flex:1; font-size:13px;" onclick="resolveTicket('${id}')">
-            ✓ Resolve & Close
+        <div style="margin-top:12px; display:flex; gap:12px;">
+          <button type="button" class="neu-btn" style="color:var(--green); flex:1;" onclick="resolveTicket('${id}')">
+            Resolve & Close
           </button>
-          <button type="button" class="neu-btn" style="color:var(--crimson); flex:1; font-size:13px;" onclick="keepPending('${id}')">
-            ⏳ Keep Open
+          <button type="button" class="neu-btn" style="color:var(--crimson); flex:1;" onclick="keepPending('${id}')">
+            Keep Open
           </button>
         </div>
       </div>
@@ -351,7 +382,7 @@
       status: 'Open - Pending Action',
       flaggedBy: activeStaff,
       flaggedDate: new Date().toISOString()
-    }).then(() => alert("Ticket marked as Open / Under Review."));
+    }).then(() => alert("Ticket recorded as Open - Pending Action."));
   }
 </script>
 </body>
