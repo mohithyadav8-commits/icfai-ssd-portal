@@ -133,7 +133,6 @@
       border-left: 5px solid var(--accent);
     }
 
-    /* Status Modal Overlay */
     #statusModal {
       display: none;
       position: fixed;
@@ -157,7 +156,6 @@
 </head>
 <body>
 
-<!-- Login / Profile Selection Screen -->
 <div class="neu-card" id="loginBox" style="max-width: 440px; margin: 60px auto; text-align: center;">
   <h2 style="color:var(--primary); margin-bottom: 8px;">SSD Staff Portal</h2>
   <p style="color:var(--subtext); font-size:14px; margin-top:0;">Select your desk profile</p>
@@ -171,7 +169,6 @@
   </button>
 </div>
 
-<!-- Main Desk Interface -->
 <div id="deskView" style="display:none; max-width: 1000px; margin: auto;">
   
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px; flex-wrap:wrap; gap:12px;">
@@ -185,7 +182,7 @@
 
     <div style="display:flex; gap:10px;">
       <button onclick="openStatusModal()" type="button" class="neu-btn" title="Desk Availability Settings">
-        ⚙ Settings
+        Availability Settings
       </button>
       <button onclick="location.reload()" type="button" class="neu-btn">
         Switch User
@@ -246,7 +243,7 @@
   <div class="neu-card" style="max-width: 420px; width: 100%;">
     <h3 style="color:var(--primary); margin-top:0;">Desk Availability Settings</h3>
     <p style="font-size:13px; color:var(--subtext); margin-bottom:15px;">
-      Set your current work status. When unavailable, students are prompted to wait or meet another staff member.
+      Set your current work status.
     </p>
 
     <label style="font-size:13px; font-weight:600;">Current State:</label>
@@ -284,13 +281,11 @@
     sel.innerHTML = '<option value="">-- Choose Profile --</option>';
     staffList.forEach(p => {
       const opt = document.createElement('option');
-      opt.value = p;
-      opt.innerText = p;
+      opt.value = p; opt.innerText = p;
       sel.appendChild(opt);
     });
   });
 
-  // Track availability state of this staff member
   db.collection('settings').doc('staffAvailability').onSnapshot(doc => {
     if (doc.exists && activeStaff) {
       const state = (doc.data() && doc.data()[activeStaff]) || 'Available';
@@ -347,6 +342,7 @@
   }
 
   function listenToQueue() {
+    // Real-time stream across all active workstations
     db.collection('enquiries').onSnapshot(snapshot => {
       let stuHTML = '';
       let facHTML = '';
@@ -356,6 +352,8 @@
       snapshot.forEach(doc => {
         const d = doc.data();
         const id = doc.id;
+        
+        // Broadcasts to all staff if "No Staff Available", or shows if assigned to this staff member
         const isAssigned = (d.assignedStaff === activeStaff || d.assignedStaff === 'No Staff Available');
         const isOpen = (d.status === 'Open' || d.status === 'Open - Pending Action');
 
@@ -393,11 +391,15 @@
 
   function renderTicketCard(id, d, isFaculty) {
     const timeStr = d.createdDate ? new Date(d.createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently';
+    const isBroadcast = d.assignedStaff === 'No Staff Available';
     return `
       <div class="ticket-row" style="border-left-color: ${isFaculty ? 'var(--crimson)' : 'var(--accent)'}">
         <div style="display:flex; justify-content:space-between; align-items:flex-start;">
           <div>
-            <div style="font-size:16px; font-weight:700; color:var(--text);">${d.name}</div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div style="font-size:16px; font-weight:700; color:var(--text);">${d.name}</div>
+              ${isBroadcast ? '<span style="font-size:10px; font-weight:700; background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:6px;">OFFICE BROADCAST</span>' : ''}
+            </div>
             <div style="font-size:13px; color:var(--subtext); margin-top:2px;">
               ${isFaculty ? 'Faculty Inquirer' : `${d.enrollment || 'N/A'} • Section ${d.sec || 'N/A'} • ${d.sem || 'N/A'}`}
             </div>
@@ -419,6 +421,8 @@
   function resolveTicket(id) {
     const sol = document.getElementById('sol_' + id).value.trim();
     if (!sol && !confirm("No remarks entered. Close ticket anyway?")) return;
+    
+    // Updates database; real-time listener clears the ticket immediately from all other staff screens
     db.collection('enquiries').doc(id).update({
       status: 'Resolved',
       solution: sol || 'Resolved without remarks',
@@ -432,7 +436,7 @@
       status: 'Open - Pending Action',
       flaggedBy: activeStaff,
       flaggedDate: new Date().toISOString()
-    }).then(() => alert("Ticket marked as Open - Pending Action."));
+    }).then(() => alert("Ticket recorded as Open - Pending Action."));
   }
 </script>
 </body>
