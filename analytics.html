@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>SSD Executive Analytics & Intelligence</title>
+  <title>SSD Master Analytics</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Firebase & Chart.js -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -17,35 +16,36 @@
       --accent: #2563eb;
       --crimson: #dc2626;
       --green: #16a34a;
+      --text: #1e293b;
+      --subtext: #64748b;
     }
     body {
       background: var(--bg);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       margin: 0;
       padding: 30px 20px;
-      color: #1e293b;
+      color: var(--text);
     }
     .neu-card {
       background: var(--bg);
       border-radius: 20px;
       box-shadow: 8px 8px 18px var(--dark-shadow), -8px -8px 18px var(--light-shadow);
       padding: 24px;
-      margin-bottom: 25px;
-      transition: all 0.3s ease;
+      margin-bottom: 24px;
     }
     .neu-btn {
       border: none;
       border-radius: 12px;
       padding: 12px 22px;
       background: var(--bg);
-      box-shadow: 5px 5px 10px var(--dark-shadow), -5px -5px 10px var(--light-shadow);
+      box-shadow: 4px 4px 10px var(--dark-shadow), -4px -4px 10px var(--light-shadow);
       cursor: pointer;
       font-weight: 600;
       color: var(--primary);
-      transition: all 0.15s ease;
+      transition: all 0.2s ease;
     }
     .neu-btn:hover {
-      box-shadow: 7px 7px 14px var(--dark-shadow), -7px -7px 14px var(--light-shadow);
+      box-shadow: 6px 6px 14px var(--dark-shadow), -6px -6px 14px var(--light-shadow);
     }
     .neu-btn:active {
       box-shadow: inset 3px 3px 6px var(--dark-shadow), inset -3px -3px 6px var(--light-shadow);
@@ -54,24 +54,24 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       gap: 18px;
-      margin-bottom: 25px;
+      margin-bottom: 24px;
     }
     .stat-val {
       font-size: 32px;
       font-weight: 800;
       margin-top: 6px;
     }
-    .charts-grid {
+    .grid-2 {
       display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 25px;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
     }
     @media (max-width: 900px) {
-      .charts-grid { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
     }
     .tag {
       background: var(--bg);
-      padding: 8px 16px;
+      padding: 7px 14px;
       border-radius: 16px;
       font-size: 13px;
       box-shadow: inset 3px 3px 6px var(--dark-shadow), inset -3px -3px 6px var(--light-shadow);
@@ -88,43 +88,41 @@
   <!-- Header Bar -->
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px; flex-wrap:wrap; gap:15px;">
     <div>
-      <h2 style="color:var(--primary); margin:0;">SSD Intelligence & Operational Analytics</h2>
-      <p style="color:#64748b; font-size:13px; margin:4px 0 0 0;">Department performance, visitor trends, and inquiry topic analysis</p>
+      <h2 style="color:var(--primary); margin:0;">SSD Intelligence & Operations</h2>
+      <p style="color:var(--subtext); font-size:13px; margin:4px 0 0 0;">Complete inquiry volume analysis, department efficiency, and faculty engagement</p>
     </div>
     <button class="neu-btn" type="button" onclick="exportMasterCSV()">
-      ⬇ Download Master Audit Report (CSV)
+      Download Master Audit Report (CSV)
     </button>
   </div>
 
-  <!-- KPI Cards Row -->
+  <!-- Primary Counters -->
   <div class="kpi-row">
     <div class="neu-card" style="margin-bottom:0;">
-      <span style="font-size:12px; font-weight:700; color:#64748b;">TOTAL ENQUIRIES</span>
+      <span style="font-size:12px; font-weight:700; color:var(--subtext);">TOTAL INQUIRIES</span>
       <div class="stat-val" id="kpiTotal" style="color:var(--primary);">0</div>
     </div>
     <div class="neu-card" style="margin-bottom:0;">
-      <span style="font-size:12px; font-weight:700; color:#64748b;">RESOLVED</span>
-      <div class="stat-val" id="kpiResolved" style="color:var(--green);">0</div>
+      <span style="font-size:12px; font-weight:700; color:var(--accent);">STUDENT QUERIES</span>
+      <div class="stat-val" id="kpiStudent" style="color:var(--accent);">0</div>
     </div>
     <div class="neu-card" style="margin-bottom:0;">
-      <span style="font-size:12px; font-weight:700; color:#64748b;">PENDING / ESCALATED</span>
-      <div class="stat-val" id="kpiPending" style="color:var(--crimson);">0</div>
+      <span style="font-size:12px; font-weight:700; color:var(--crimson);">FACULTY QUERIES</span>
+      <div class="stat-val" id="kpiFaculty" style="color:var(--crimson);">0</div>
     </div>
     <div class="neu-card" style="margin-bottom:0;">
-      <span style="font-size:12px; font-weight:700; color:#64748b;">RESOLUTION EFFICIENCY</span>
-      <div class="stat-val" id="kpiEff" style="color:var(--accent);">0%</div>
+      <span style="font-size:12px; font-weight:700; color:var(--green);">RESOLUTION EFFICIENCY</span>
+      <div class="stat-val" id="kpiEff" style="color:var(--green);">0%</div>
     </div>
   </div>
 
-  <!-- Interactive Charts Grid -->
-  <div class="charts-grid" style="margin-bottom: 25px;">
-    <!-- Daily Volume Timeline -->
-    <div class="neu-card">
-      <h3 style="color:var(--primary); margin-top:0;">Daily Visitor Volume</h3>
-      <canvas id="timelineChart" height="120"></canvas>
+  <!-- Interactive Charts -->
+  <div class="grid-2" style="margin-bottom: 24px;">
+    <div class="neu-card" style="margin-bottom:0;">
+      <h3 style="color:var(--primary); margin-top:0;">Daily Influx Timeline</h3>
+      <canvas id="timelineChart" height="130"></canvas>
     </div>
-    <!-- Visitor Demographics Doughnut -->
-    <div class="neu-card">
+    <div class="neu-card" style="margin-bottom:0;">
       <h3 style="color:var(--primary); margin-top:0;">Visitor Ratio</h3>
       <canvas id="demographicsChart"></canvas>
     </div>
@@ -132,32 +130,44 @@
 
   <!-- Staff Resolution Performance -->
   <div class="neu-card">
-    <h3 style="color:var(--primary); margin-top:0;">Staff Resolution & Allocation Metrics</h3>
-    <div id="staffMetricsTable" style="overflow-x:auto;">
+    <h3 style="color:var(--primary); margin-top:0;">Staff Resolution Breakdown</h3>
+    <div style="overflow-x:auto;">
       <table style="width:100%; border-collapse:collapse; font-size:14px; text-align:left;">
         <thead>
-          <tr style="border-bottom: 2px solid #cbd5e1; color:#64748b;">
-            <th style="padding:10px;">Staff Identity</th>
-            <th style="padding:10px;">Assigned</th>
+          <tr style="border-bottom: 2px solid #cbd5e1; color:var(--subtext);">
+            <th style="padding:10px;">Staff Member</th>
+            <th style="padding:10px;">Total Assigned</th>
             <th style="padding:10px;">Resolved</th>
             <th style="padding:10px;">Pending</th>
-            <th style="padding:10px;">Success Rate</th>
+            <th style="padding:10px;">Resolution Rate</th>
           </tr>
         </thead>
         <tbody id="staffTableBody">
-          <tr><td colspan="5" style="padding:15px; text-align:center; color:#94a3b8;">Loading desk figures...</td></tr>
+          <tr><td colspan="5" style="padding:15px; text-align:center; color:#94a3b8;">Aggregating records...</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- Text Analysis Keyword Cloud -->
-  <div class="neu-card">
-    <h3 style="color:var(--primary); margin-top:0;">Frequent Issue Topics (Text Mining)</h3>
-    <p style="font-size:13px; color:#64748b; margin-bottom:15px;">
-      Common keywords extracted from enquiry statements to identify recurring student friction points:
-    </p>
-    <div id="keywordCloud" style="display:flex; flex-wrap:wrap; gap:10px;"></div>
+  <!-- Dual Stream Text Mining -->
+  <div class="grid-2">
+    <!-- Student Topics -->
+    <div class="neu-card" style="margin-bottom:0;">
+      <h3 style="color:var(--accent); margin-top:0;">Student Topics (Frequent Concerns)</h3>
+      <p style="font-size:13px; color:var(--subtext); margin-bottom:15px;">
+        Recurring inquiry terms extracted from student visit requests:
+      </p>
+      <div id="studentKeywords" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+    </div>
+
+    <!-- Faculty Topics -->
+    <div class="neu-card" style="margin-bottom:0;">
+      <h3 style="color:var(--crimson); margin-top:0;">Faculty Topics (Departmental Requests)</h3>
+      <p style="font-size:13px; color:var(--subtext); margin-bottom:15px;">
+        Key subjects raised by faculty members:
+      </p>
+      <div id="facultyKeywords" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+    </div>
   </div>
 
 </div>
@@ -181,7 +191,6 @@
   db.collection('enquiries').onSnapshot(snapshot => {
     masterRecords = [];
     let resolved = 0;
-    let pending = 0;
     let students = 0;
     let faculty = 0;
     let staffStats = {
@@ -193,20 +202,24 @@
       "No Staff Available": { assigned: 0, resolved: 0 }
     };
 
-    let wordFrequencies = {};
-    let dailyTrends = {};
-    const stopWords = ["this", "that", "have", "from", "with", "what", "some", "please", "regarding", "about", "want", "need", "issue", "help", "detail", "details", "there", "query"];
+    let studentWords = {};
+    let facultyWords = {};
+    let dailyTimeline = {};
+    const stopWords = ["this", "that", "have", "from", "with", "what", "some", "please", "regarding", "about", "want", "need", "issue", "help", "detail", "details", "there", "query", "queries"];
 
     snapshot.forEach(doc => {
       const d = doc.data();
       masterRecords.push(d);
 
-      // Core counters
       if (d.status === 'Resolved') resolved++;
-      else pending++;
 
-      if (d.type === 'Faculty') faculty++;
-      else students++;
+      if (d.type === 'Faculty') {
+        faculty++;
+        mineKeywords(d.query, facultyWords, stopWords);
+      } else {
+        students++;
+        mineKeywords(d.query, studentWords, stopWords);
+      }
 
       // Staff metrics
       const staffKey = d.assignedStaff || "No Staff Available";
@@ -214,32 +227,45 @@
       staffStats[staffKey].assigned++;
       if (d.status === 'Resolved') staffStats[staffKey].resolved++;
 
-      // Date trend
+      // Daily timeline
       const dateKey = d.createdDate ? d.createdDate.substring(0, 10) : new Date().toISOString().substring(0, 10);
-      dailyTrends[dateKey] = (dailyTrends[dateKey] || 0) + 1;
-
-      // Text mining
-      if (d.query) {
-        const tokens = d.query.toLowerCase().replace(/[^a-zA-Z ]/g, " ").split(/\s+/);
-        tokens.forEach(w => {
-          if (w.length > 3 && !stopWords.includes(w)) {
-            wordFrequencies[w] = (wordFrequencies[w] || 0) + 1;
-          }
-        });
-      }
+      dailyTimeline[dateKey] = (dailyTimeline[dateKey] || 0) + 1;
     });
 
-    // Update KPIs
     const total = masterRecords.length;
     document.getElementById('kpiTotal').innerText = total;
-    document.getElementById('kpiResolved').innerText = resolved;
-    document.getElementById('kpiPending').innerText = pending;
+    document.getElementById('kpiStudent').innerText = students;
+    document.getElementById('kpiFaculty').innerText = faculty;
     document.getElementById('kpiEff').innerText = total ? Math.round((resolved / total) * 100) + '%' : '0%';
 
     renderStaffTable(staffStats);
-    renderCharts(dailyTrends, students, faculty);
-    renderKeywords(wordFrequencies);
+    renderCharts(dailyTimeline, students, faculty);
+    renderKeywordStream('studentKeywords', studentWords, 'var(--accent)');
+    renderKeywordStream('facultyKeywords', facultyWords, 'var(--crimson)');
   });
+
+  function mineKeywords(text, targetMap, stopWords) {
+    if (!text) return;
+    const tokens = text.toLowerCase().replace(/[^a-zA-Z ]/g, " ").split(/\s+/);
+    tokens.forEach(w => {
+      if (w.length > 3 && !stopWords.includes(w)) {
+        targetMap[w] = (targetMap[w] || 0) + 1;
+      }
+    });
+  }
+
+  function renderKeywordStream(elementId, wordMap, highlightColor) {
+    const el = document.getElementById(elementId);
+    el.innerHTML = '';
+    const sorted = Object.entries(wordMap).sort((a, b) => b[1] - a[1]).slice(0, 15);
+    if (!sorted.length) {
+      el.innerHTML = '<span style="color:#94a3b8; font-size:13px;">No topic entries recorded yet.</span>';
+      return;
+    }
+    sorted.forEach(([w, count]) => {
+      el.innerHTML += `<span class="tag"><b>${w}</b> <span style="color:${highlightColor}; font-weight:700;">${count}</span></span>`;
+    });
+  }
 
   function renderStaffTable(stats) {
     const tbody = document.getElementById('staffTableBody');
@@ -254,14 +280,13 @@
           <td style="padding:10px;">${s.assigned}</td>
           <td style="padding:10px; color:var(--green); font-weight:600;">${s.resolved}</td>
           <td style="padding:10px; color:var(--crimson); font-weight:600;">${pending}</td>
-          <td style="padding:10px;">${rate}</td>
+          <td style="padding:10px; font-weight:700;">${rate}</td>
         </tr>
       `;
     });
   }
 
   function renderCharts(trends, studentCount, facultyCount) {
-    // 1. Timeline Chart
     const dates = Object.keys(trends).sort();
     const counts = dates.map(d => trends[d]);
 
@@ -269,20 +294,19 @@
     timelineChartInstance = new Chart(document.getElementById('timelineChart'), {
       type: 'line',
       data: {
-        labels: dates.length ? dates : ['No Records'],
+        labels: dates.length ? dates : ['No Data'],
         datasets: [{
-          label: 'Total Visits',
+          label: 'Inquiries',
           data: counts.length ? counts : [0],
           borderColor: '#2563eb',
-          backgroundColor: 'rgba(37, 99, 235, 0.1)',
+          backgroundColor: 'rgba(37, 99, 235, 0.08)',
           fill: true,
-          tension: 0.35
+          tension: 0.3
         }]
       },
       options: { responsive: true, plugins: { legend: { display: false } } }
     });
 
-    // 2. Demographics Chart
     if (demographicsChartInstance) demographicsChartInstance.destroy();
     demographicsChartInstance = new Chart(document.getElementById('demographicsChart'), {
       type: 'doughnut',
@@ -297,22 +321,9 @@
     });
   }
 
-  function renderKeywords(words) {
-    const container = document.getElementById('keywordCloud');
-    container.innerHTML = '';
-    const sorted = Object.entries(words).sort((a, b) => b[1] - a[1]).slice(0, 20);
-    if (!sorted.length) {
-      container.innerHTML = '<span style="color:#94a3b8; font-size:13px;">No keyword patterns identified yet.</span>';
-      return;
-    }
-    sorted.forEach(([w, count]) => {
-      container.innerHTML += `<span class="tag"><b>${w}</b> <span style="color:var(--accent); font-weight:700;">${count}</span></span>`;
-    });
-  }
-
   function exportMasterCSV() {
     if (!masterRecords.length) {
-      alert("No data to export.");
+      alert("No data available to export.");
       return;
     }
     let csv = "Type,Name,Enrollment,Section,Semester,Assigned Staff,Query,Solution Remarks,Status,Created Date\n";
@@ -322,7 +333,7 @@
     const blob = new Blob([csv], { type: 'text/csv' });
     const link = document.createElement('a');
     link.href = window.URL.createObjectURL(blob);
-    link.download = `SSD_Executive_Audit_${new Date().toISOString().substring(0, 10)}.csv`;
+    link.download = `SSD_Audit_Report_${new Date().toISOString().substring(0, 10)}.csv`;
     link.click();
   }
 </script>
