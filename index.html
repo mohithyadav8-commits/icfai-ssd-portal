@@ -15,6 +15,7 @@
       --accent: #2b6cb0;
       --crimson: #dc2626;
       --amber: #d97706;
+      --green: #16a34a;
     }
     body {
       background: var(--bg);
@@ -106,7 +107,6 @@
     .grid-2 { display: flex; gap: 12px; }
     .grid-2 > div { flex: 1; }
 
-    /* Side Announcement Container */
     #sideNoticeContainer {
       display: none;
       width: 100%;
@@ -119,7 +119,6 @@
       border-left: 5px solid var(--amber);
       animation: fadeIn 0.4s ease-out;
     }
-
     .notice-header-badge {
       display: inline-flex;
       align-items: center;
@@ -134,7 +133,6 @@
       border-radius: 8px;
       margin-bottom: 10px;
     }
-
     .status-alert-box {
       display: none;
       background: #fef2f2;
@@ -148,6 +146,36 @@
       animation: fadeIn 0.25s ease;
     }
 
+    /* Token Slip Modal */
+    #tokenModal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(5px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .token-box {
+      background: var(--bg);
+      border-radius: 24px;
+      padding: 35px 30px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 16px 16px 32px var(--shadow-dark), -16px -16px 32px var(--shadow-light);
+      box-sizing: border-box;
+      animation: fadeIn 0.3s ease-out;
+    }
+    .token-display {
+      font-size: 54px;
+      font-weight: 900;
+      color: var(--primary);
+      margin: 15px 0;
+      letter-spacing: 2px;
+    }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
@@ -219,7 +247,6 @@
     </form>
   </div>
 
-  <!-- Standard Institutional Announcement Card (Student View Only) -->
   <div id="sideNoticeContainer">
     <div class="notice-header-badge">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
@@ -229,6 +256,18 @@
     <div id="sideNoticeBody" style="font-size:13px; line-height:1.55; color:#334155;"></div>
   </div>
 
+</div>
+
+<!-- Digital Queue Token Slip Modal -->
+<div id="tokenModal">
+  <div class="token-box">
+    <div style="font-size:13px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:1px;">ICFAI Student Service Department</div>
+    <h3 style="margin:6px 0 0 0; color:var(--primary);">Your Digital Queue Token</h3>
+    <div class="token-display" id="tokenNumberDisplay">S-01</div>
+    <div style="font-size:15px; font-weight:600; color:#1e293b;" id="tokenVisitorName">Student Name</div>
+    <p style="font-size:13px; color:#64748b; margin:10px 0 20px 0;" id="tokenDeskMsg">Please proceed to the waiting area. Your assigned desk will attend to you shortly.</p>
+    <button type="button" class="neu-btn" onclick="closeTokenModal()">Acknowledge & Close</button>
+  </div>
 </div>
 
 <script>
@@ -249,7 +288,6 @@
   let noticeConfig = { active: false, title: '', message: '' };
   let currentActiveTab = 'student';
 
-  // 1. Initial Fallback Load from Files
   fetch('Combined data Student List CSV.json').then(r => r.json()).then(data => {
     data.forEach(item => {
       if (item.Enrolno) {
@@ -276,7 +314,6 @@
     });
   }).catch(() => {});
 
-  // 2. Real-time Directory Sync
   db.collection('directory').doc('master').onSnapshot(doc => {
     if (doc.exists) {
       const d = doc.data();
@@ -294,7 +331,6 @@
     }
   });
 
-  // 3. Staff Directory & Availability Listeners
   db.collection('settings').doc('staffList').onSnapshot(doc => {
     const staffList = (doc.exists && doc.data().names) ? doc.data().names : ["Person 1", "Person 2", "Person 3", "Person 4", "Person 5"];
     document.querySelectorAll('.staffDropdown').forEach(sel => {
@@ -320,7 +356,6 @@
     }
   });
 
-  // 4. Side Notice Listener
   db.collection('settings').doc('broadcast').onSnapshot(doc => {
     if (doc.exists) {
       noticeConfig = {
@@ -361,7 +396,6 @@
       submitBtn.disabled = false;
       return;
     }
-
     const state = staffStatusMap[staff] || 'Available';
     if (state === 'Lunch Break' || state === 'In Meeting') {
       alertBox.innerHTML = `<strong>Unavailable:</strong> ${staff} is currently <strong>${state.toLowerCase()}</strong>. Please visit after some time or select another staff member.`;
@@ -386,81 +420,151 @@
     }
   }
 
+  // Generate Daily Sequential Token (e.g., S-01, F-01)
+  async function generateToken(prefix) {
+    const todayStr = new Date().toISOString().substring(0, 10);
+    const tokenDocRef = db.collection('tokenCounters').doc(todayStr);
+    return db.runTransaction(async transaction => {
+      const doc = await transaction.get(tokenDocRef);
+      let current = 0;
+      if (doc.exists && doc.data()[prefix]) {
+        current = doc.data()[prefix];
+      }
+      const next = current + 1;
+      transaction.set(tokenDocRef, { [prefix]: next }, { merge: true });
+      const padded = next < 10 ? '0' + next : String(next);
+      return `${prefix}-${padded}`;
+    });
+  }
+
+  // Check Repeat Visitor Status (Last 7 Days)
+  async function checkRecentVisits(enrollment) {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    try {
+      const snap = await db.collection('enquiries')
+        .where('enrollment', '==', enrollment)
+        .where('createdDate', '>=', sevenDaysAgo)
+        .get();
+      return snap.size;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  function showTokenModal(token, name, staff) {
+    document.getElementById('tokenNumberDisplay').innerText = token;
+    document.getElementById('tokenVisitorName').innerText = name;
+    document.getElementById('tokenDeskMsg').innerText = `Assigned to: ${staff}. Please take a seat in the waiting area.`;
+    document.getElementById('tokenModal').style.display = 'flex';
+  }
+
+  function closeTokenModal() {
+    document.getElementById('tokenModal').style.display = 'none';
+  }
+
   document.getElementById('studentForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const btn = document.getElementById('stuSubmitBtn');
     btn.disabled = true;
-    btn.innerText = "Transmitting...";
+    btn.innerText = "Generating Token...";
 
     const enr = document.getElementById('stuEnroll').value.trim().toUpperCase();
     const name = document.getElementById('stuName').value.trim();
     const sec = document.getElementById('stuSec').value.trim();
     const sem = document.getElementById('stuSem').value.trim();
+    const staff = document.getElementById('stuStaff').value;
+    const query = document.getElementById('stuQuery').value.trim();
 
-    // Auto-update student master directory if newly entered or modified
-    if (!studentMap[enr] || studentMap[enr].name !== name) {
-      studentMap[enr] = { name: name, sec: sec, sem: sem };
-      db.collection('directory').doc('master').set({
-        students: { [enr]: { name: name, sec: sec, sem: sem } }
-      }, { merge: true }).catch(() => {});
-    }
+    try {
+      // 1. Auto-update Student Directory
+      if (!studentMap[enr] || studentMap[enr].name !== name) {
+        studentMap[enr] = { name: name, sec: sec, sem: sem };
+        db.collection('directory').doc('master').set({
+          students: { [enr]: { name: name, sec: sec, sem: sem } }
+        }, { merge: true }).catch(() => {});
+      }
 
-    db.collection('enquiries').add({
-      type: 'Student',
-      enrollment: enr,
-      name: name,
-      sec: sec,
-      sem: sem,
-      assignedStaff: document.getElementById('stuStaff').value,
-      query: document.getElementById('stuQuery').value.trim(),
-      status: 'Open',
-      createdDate: new Date().toISOString()
-    }).then(() => {
-      alert('Enquiry submitted successfully.');
+      // 2. Repeat Visitor Detection
+      const priorVisits = await checkRecentVisits(enr);
+      const isRepeat = priorVisits >= 1; // already visited within 7 days
+
+      // 3. Generate Sequential Token
+      const token = await generateToken('S');
+
+      // 4. Save Enquiry with Millisecond Tracking
+      const nowIso = new Date().toISOString();
+      await db.collection('enquiries').add({
+        type: 'Student',
+        tokenNumber: token,
+        enrollment: enr,
+        name: name,
+        sec: sec,
+        sem: sem,
+        assignedStaff: staff,
+        query: query,
+        status: 'Open',
+        isRepeatVisitor: isRepeat,
+        priorVisitCount: priorVisits,
+        createdDate: nowIso,
+        startTimestamp: Date.now()
+      });
+
+      showTokenModal(token, name, staff);
       document.getElementById('studentForm').reset();
       document.getElementById('stuStatusAlert').style.display = 'none';
-    }).catch(err => alert("Error: " + err.message))
-    .finally(() => {
+    } catch (err) {
+      alert("Submission error: " + err.message);
+    } finally {
       btn.disabled = false;
       btn.innerText = "Submit Student Enquiry";
-    });
+    }
   });
 
   document.getElementById('facultyForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const btn = document.getElementById('facSubmitBtn');
     btn.disabled = true;
-    btn.innerText = "Transmitting...";
+    btn.innerText = "Generating Token...";
 
     const facName = document.getElementById('facName').value.trim();
+    const staff = document.getElementById('facStaff').value;
+    const query = document.getElementById('facQuery').value.trim();
 
-    // Auto-update faculty master directory if a new name is entered
-    if (facName && !facultyList.includes(facName)) {
-      facultyList.push(facName);
-      db.collection('directory').doc('master').set({
-        faculty: firebase.firestore.FieldValue.arrayUnion(facName)
-      }, { merge: true }).catch(() => {});
-    }
+    try {
+      if (facName && !facultyList.includes(facName)) {
+        facultyList.push(facName);
+        db.collection('directory').doc('master').set({
+          faculty: firebase.firestore.FieldValue.arrayUnion(facName)
+        }, { merge: true }).catch(() => {});
+      }
 
-    db.collection('enquiries').add({
-      type: 'Faculty',
-      enrollment: 'FACULTY',
-      name: facName,
-      sec: '',
-      sem: '',
-      assignedStaff: document.getElementById('facStaff').value,
-      query: document.getElementById('facQuery').value.trim(),
-      status: 'Open',
-      createdDate: new Date().toISOString()
-    }).then(() => {
-      alert('Faculty enquiry registered.');
+      const token = await generateToken('F');
+      const nowIso = new Date().toISOString();
+
+      await db.collection('enquiries').add({
+        type: 'Faculty',
+        tokenNumber: token,
+        enrollment: 'FACULTY',
+        name: facName,
+        sec: '',
+        sem: '',
+        assignedStaff: staff,
+        query: query,
+        status: 'Open',
+        isRepeatVisitor: false,
+        createdDate: nowIso,
+        startTimestamp: Date.now()
+      });
+
+      showTokenModal(token, facName, staff);
       document.getElementById('facultyForm').reset();
       document.getElementById('facStatusAlert').style.display = 'none';
-    }).catch(err => alert("Error: " + err.message))
-    .finally(() => {
+    } catch (err) {
+      alert("Submission error: " + err.message);
+    } finally {
       btn.disabled = false;
       btn.innerText = "Submit Faculty Enquiry";
-    });
+    }
   });
 </script>
 </body>
