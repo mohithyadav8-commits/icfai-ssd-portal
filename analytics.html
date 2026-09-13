@@ -2,11 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>SSD Master Analytics</title>
+  <title>SSD Head - Master Operations & Settings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Firebase, Chart.js & PapaParse for In-Browser CSV Translation -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <style>
     :root {
       --bg: #e2e8f0;
@@ -33,6 +35,18 @@
       padding: 24px;
       margin-bottom: 24px;
     }
+    .neu-inset {
+      background: var(--bg);
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      box-shadow: inset 4px 4px 8px var(--dark-shadow), inset -4px -4px 8px var(--light-shadow);
+      outline: none;
+      font-size: 14px;
+      width: 100%;
+      box-sizing: border-box;
+      color: var(--text);
+    }
     .neu-btn {
       border: none;
       border-radius: 12px;
@@ -44,31 +58,47 @@
       color: var(--primary);
       transition: all 0.2s ease;
     }
-    .neu-btn:hover {
-      box-shadow: 6px 6px 14px var(--dark-shadow), -6px -6px 14px var(--light-shadow);
+    .neu-btn:hover { box-shadow: 6px 6px 14px var(--dark-shadow), -6px -6px 14px var(--light-shadow); }
+    .neu-btn:active { box-shadow: inset 3px 3px 6px var(--dark-shadow), inset -3px -3px 6px var(--light-shadow); }
+    
+    .nav-tabs {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 25px;
+      background: var(--bg);
+      padding: 6px;
+      border-radius: 16px;
+      box-shadow: inset 4px 4px 8px var(--dark-shadow), inset -4px -4px 8px var(--light-shadow);
     }
-    .neu-btn:active {
-      box-shadow: inset 3px 3px 6px var(--dark-shadow), inset -3px -3px 6px var(--light-shadow);
+    .nav-btn {
+      flex: 1;
+      padding: 14px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--subtext);
+      border-radius: 12px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      transition: all 0.2s ease;
     }
+    .nav-btn.active {
+      background: var(--bg);
+      color: var(--primary);
+      box-shadow: 4px 4px 10px var(--dark-shadow), -4px -4px 10px var(--light-shadow);
+    }
+    
     .kpi-row {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       gap: 18px;
       margin-bottom: 24px;
     }
-    .stat-val {
-      font-size: 32px;
-      font-weight: 800;
-      margin-top: 6px;
-    }
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-    }
-    @media (max-width: 900px) {
-      .grid-2 { grid-template-columns: 1fr; }
-    }
+    .stat-val { font-size: 32px; font-weight: 800; margin-top: 6px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+    
     .tag {
       background: var(--bg);
       padding: 7px 14px;
@@ -79,95 +109,179 @@
       align-items: center;
       gap: 6px;
     }
+    .staff-chip {
+      background: var(--bg);
+      padding: 8px 14px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 3px 3px 7px var(--dark-shadow), -3px -3px 7px var(--light-shadow);
+      margin: 6px;
+    }
   </style>
 </head>
 <body>
 
 <div style="max-width: 1280px; margin: auto;">
   
-  <!-- Header Bar -->
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px; flex-wrap:wrap; gap:15px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; flex-wrap:wrap; gap:15px;">
     <div>
-      <h2 style="color:var(--primary); margin:0;">SSD Intelligence & Operations</h2>
-      <p style="color:var(--subtext); font-size:13px; margin:4px 0 0 0;">Complete inquiry volume analysis, department efficiency, and faculty engagement</p>
+      <h2 style="color:var(--primary); margin:0;">SSD Executive Portal</h2>
+      <p style="color:var(--subtext); font-size:13px; margin:4px 0 0 0;">Operations Intelligence, Real-time Control & Directory Administration</p>
     </div>
-    <button class="neu-btn" type="button" onclick="exportMasterCSV()">
-      Download Master Audit Report (CSV)
-    </button>
+    <button class="neu-btn" type="button" onclick="exportMasterCSV()">Download Full Report (CSV)</button>
   </div>
 
-  <!-- Primary Counters -->
-  <div class="kpi-row">
-    <div class="neu-card" style="margin-bottom:0;">
-      <span style="font-size:12px; font-weight:700; color:var(--subtext);">TOTAL INQUIRIES</span>
-      <div class="stat-val" id="kpiTotal" style="color:var(--primary);">0</div>
+  <!-- Primary Navigation -->
+  <div class="nav-tabs">
+    <button class="nav-btn active" id="tabNavAnalytics" onclick="switchMainTab('analytics')">Operational Analytics</button>
+    <button class="nav-btn" id="tabNavSettings" onclick="switchMainTab('settings')">Master Settings & Management</button>
+  </div>
+
+  <!-- VIEW 1: ANALYTICS -->
+  <div id="analyticsSection">
+    <div class="kpi-row">
+      <div class="neu-card" style="margin-bottom:0;">
+        <span style="font-size:12px; font-weight:700; color:var(--subtext);">TOTAL INQUIRIES</span>
+        <div class="stat-val" id="kpiTotal" style="color:var(--primary);">0</div>
+      </div>
+      <div class="neu-card" style="margin-bottom:0;">
+        <span style="font-size:12px; font-weight:700; color:var(--accent);">STUDENT VISITS</span>
+        <div class="stat-val" id="kpiStudent" style="color:var(--accent);">0</div>
+      </div>
+      <div class="neu-card" style="margin-bottom:0;">
+        <span style="font-size:12px; font-weight:700; color:var(--crimson);">FACULTY VISITS</span>
+        <div class="stat-val" id="kpiFaculty" style="color:var(--crimson);">0</div>
+      </div>
+      <div class="neu-card" style="margin-bottom:0;">
+        <span style="font-size:12px; font-weight:700; color:var(--green);">RESOLUTION EFFICIENCY</span>
+        <div class="stat-val" id="kpiEff" style="color:var(--green);">0%</div>
+      </div>
     </div>
-    <div class="neu-card" style="margin-bottom:0;">
-      <span style="font-size:12px; font-weight:700; color:var(--accent);">STUDENT QUERIES</span>
-      <div class="stat-val" id="kpiStudent" style="color:var(--accent);">0</div>
+
+    <div class="grid-2" style="margin-bottom: 24px;">
+      <div class="neu-card" style="margin-bottom:0;">
+        <h3 style="color:var(--primary); margin-top:0;">Daily Influx Timeline</h3>
+        <canvas id="timelineChart" height="130"></canvas>
+      </div>
+      <div class="neu-card" style="margin-bottom:0;">
+        <h3 style="color:var(--primary); margin-top:0;">Visitor Ratio</h3>
+        <canvas id="demographicsChart"></canvas>
+      </div>
     </div>
-    <div class="neu-card" style="margin-bottom:0;">
-      <span style="font-size:12px; font-weight:700; color:var(--crimson);">FACULTY QUERIES</span>
-      <div class="stat-val" id="kpiFaculty" style="color:var(--crimson);">0</div>
+
+    <div class="neu-card">
+      <h3 style="color:var(--primary); margin-top:0;">Staff Resolution Breakdown</h3>
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px; text-align:left;">
+          <thead>
+            <tr style="border-bottom: 2px solid #cbd5e1; color:var(--subtext);">
+              <th style="padding:10px;">Staff Member</th>
+              <th style="padding:10px;">Total Assigned</th>
+              <th style="padding:10px;">Resolved</th>
+              <th style="padding:10px;">Pending</th>
+              <th style="padding:10px;">Resolution Rate</th>
+            </tr>
+          </thead>
+          <tbody id="staffTableBody">
+            <tr><td colspan="5" style="padding:15px; text-align:center; color:#94a3b8;">Aggregating records...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-    <div class="neu-card" style="margin-bottom:0;">
-      <span style="font-size:12px; font-weight:700; color:var(--green);">RESOLUTION EFFICIENCY</span>
-      <div class="stat-val" id="kpiEff" style="color:var(--green);">0%</div>
+
+    <div class="grid-2">
+      <div class="neu-card" style="margin-bottom:0;">
+        <h3 style="color:var(--accent); margin-top:0;">Student Topics (Frequent Concerns)</h3>
+        <p style="font-size:13px; color:var(--subtext); margin-bottom:15px;">Recurring inquiry topics raised by students:</p>
+        <div id="studentKeywords" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+      </div>
+      <div class="neu-card" style="margin-bottom:0;">
+        <h3 style="color:var(--crimson); margin-top:0;">Faculty Topics (Departmental Requests)</h3>
+        <p style="font-size:13px; color:var(--subtext); margin-bottom:15px;">Recurring inquiry topics raised by faculty:</p>
+        <div id="facultyKeywords" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+      </div>
     </div>
   </div>
 
-  <!-- Interactive Charts -->
-  <div class="grid-2" style="margin-bottom: 24px;">
-    <div class="neu-card" style="margin-bottom:0;">
-      <h3 style="color:var(--primary); margin-top:0;">Daily Influx Timeline</h3>
-      <canvas id="timelineChart" height="130"></canvas>
+  <!-- VIEW 2: MASTER SETTINGS -->
+  <div id="settingsSection" style="display:none;">
+    
+    <!-- Realtime Notice Broadcast -->
+    <div class="neu-card">
+      <h3 style="color:var(--primary); margin-top:0;">Entrance Desk Live Notice Board</h3>
+      <p style="font-size:13px; color:var(--subtext);">Display an immediate alert across all entrance tablets in real time.</p>
+      
+      <div class="grid-2">
+        <div>
+          <label style="font-size:13px; font-weight:600;">Notice Headline</label>
+          <input type="text" id="noticeTitleInput" class="neu-inset" placeholder="e.g. SSD Desk Update / Lunch Break Announcement">
+        </div>
+        <div>
+          <label style="font-size:13px; font-weight:600;">Notice Status</label>
+          <select id="noticeActiveSelect" class="neu-inset">
+            <option value="true">Active (Display on Front Desk)</option>
+            <option value="false">Inactive (Hide Notice)</option>
+          </select>
+        </div>
+      </div>
+      <label style="font-size:13px; font-weight:600; display:block; margin-top:12px;">Notice Details</label>
+      <textarea id="noticeBodyInput" class="neu-inset" rows="2" placeholder="Type announcement for visitors..."></textarea>
+      
+      <button class="neu-btn" type="button" onclick="saveBroadcastNotice()" style="margin-top:14px; color:var(--accent);">
+        Publish Notice
+      </button>
     </div>
-    <div class="neu-card" style="margin-bottom:0;">
-      <h3 style="color:var(--primary); margin-top:0;">Visitor Ratio</h3>
-      <canvas id="demographicsChart"></canvas>
-    </div>
-  </div>
 
-  <!-- Staff Resolution Performance -->
-  <div class="neu-card">
-    <h3 style="color:var(--primary); margin-top:0;">Staff Resolution Breakdown</h3>
-    <div style="overflow-x:auto;">
-      <table style="width:100%; border-collapse:collapse; font-size:14px; text-align:left;">
-        <thead>
-          <tr style="border-bottom: 2px solid #cbd5e1; color:var(--subtext);">
-            <th style="padding:10px;">Staff Member</th>
-            <th style="padding:10px;">Total Assigned</th>
-            <th style="padding:10px;">Resolved</th>
-            <th style="padding:10px;">Pending</th>
-            <th style="padding:10px;">Resolution Rate</th>
-          </tr>
-        </thead>
-        <tbody id="staffTableBody">
-          <tr><td colspan="5" style="padding:15px; text-align:center; color:#94a3b8;">Aggregating records...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+    <!-- Staff Identity Configuration -->
+    <div class="neu-card">
+      <h3 style="color:var(--primary); margin-top:0;">SSD Staff Profile Management</h3>
+      <p style="font-size:13px; color:var(--subtext);">Add or remove staff desks. Updates propagate immediately to all dropdowns.</p>
 
-  <!-- Dual Stream Text Mining -->
-  <div class="grid-2">
-    <!-- Student Topics -->
-    <div class="neu-card" style="margin-bottom:0;">
-      <h3 style="color:var(--accent); margin-top:0;">Student Topics (Frequent Concerns)</h3>
-      <p style="font-size:13px; color:var(--subtext); margin-bottom:15px;">
-        Recurring inquiry terms extracted from student visit requests:
+      <div style="display:flex; gap:12px; margin-bottom:18px;">
+        <input type="text" id="newStaffInput" class="neu-inset" placeholder="Staff Name (e.g. Dr. Jane Doe)">
+        <button class="neu-btn" type="button" onclick="addNewStaff()" style="white-space:nowrap; color:var(--green);">+ Add Profile</button>
+      </div>
+
+      <label style="font-size:13px; font-weight:600;">Current Configured Profiles:</label>
+      <div id="staffChipContainer" style="margin-top:10px;"></div>
+    </div>
+
+    <!-- Student & Faculty Directory Updates (Raw CSV Upload) -->
+    <div class="neu-card">
+      <h3 style="color:var(--primary); margin-top:0;">Bulk Directory Upload (Raw CSV)</h3>
+      <p style="font-size:13px; color:var(--subtext); line-height:1.5;">
+        Upload standard Excel CSV files. The system processes the fields directly in the browser and updates lookups without needing manual JSON conversions.
       </p>
-      <div id="studentKeywords" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+
+      <div class="grid-2">
+        <div style="background:#f8fafc; padding:18px; border-radius:14px;">
+          <h4 style="margin:0 0 10px 0; color:var(--accent);">Update Student Directory</h4>
+          <p style="font-size:12px; color:var(--subtext); margin-bottom:12px;">Requires columns: <code>Enrolno</code>, <code>Name</code>, <code>Sec</code>, <code>Semester</code></p>
+          <input type="file" id="studentCSVInput" accept=".csv" class="neu-inset">
+          <button class="neu-btn" type="button" onclick="processStudentCSV()" style="margin-top:12px; width:100%;">Upload & Update Students</button>
+        </div>
+
+        <div style="background:#f8fafc; padding:18px; border-radius:14px;">
+          <h4 style="margin:0 0 10px 0; color:var(--crimson);">Update Faculty Directory</h4>
+          <p style="font-size:12px; color:var(--subtext); margin-bottom:12px;">Requires column: <code>Faculty Name</code> or <code>Name</code></p>
+          <input type="file" id="facultyCSVInput" accept=".csv" class="neu-inset">
+          <button class="neu-btn" type="button" onclick="processFacultyCSV()" style="margin-top:12px; width:100%;">Upload & Update Faculty</button>
+        </div>
+      </div>
+      <div id="uploadStatusText" style="margin-top:14px; font-size:13px; font-weight:600;"></div>
     </div>
 
-    <!-- Faculty Topics -->
-    <div class="neu-card" style="margin-bottom:0;">
-      <h3 style="color:var(--crimson); margin-top:0;">Faculty Topics (Departmental Requests)</h3>
-      <p style="font-size:13px; color:var(--subtext); margin-bottom:15px;">
-        Key subjects raised by faculty members:
-      </p>
-      <div id="facultyKeywords" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+    <!-- Administrative Data Controls -->
+    <div class="neu-card">
+      <h3 style="color:var(--crimson); margin-top:0;">Database Cleanup</h3>
+      <p style="font-size:13px; color:var(--subtext);">Clear test entries created during initial system evaluation.</p>
+      <button class="neu-btn" type="button" onclick="clearTestEntries()" style="color:var(--crimson);">
+        Purge Resolved Enquiries
+      </button>
     </div>
+
   </div>
 
 </div>
@@ -185,22 +299,26 @@
   const db = firebase.firestore();
 
   let masterRecords = [];
+  let currentStaffList = [];
   let timelineChartInstance = null;
   let demographicsChartInstance = null;
 
+  function switchMainTab(tab) {
+    document.getElementById('analyticsSection').style.display = tab === 'analytics' ? 'block' : 'none';
+    document.getElementById('settingsSection').style.display = tab === 'settings' ? 'block' : 'none';
+    document.getElementById('tabNavAnalytics').classList.toggle('active', tab === 'analytics');
+    document.getElementById('tabNavSettings').classList.toggle('active', tab === 'settings');
+  }
+
+  // 1. Inquiries Realtime Aggregation
   db.collection('enquiries').onSnapshot(snapshot => {
     masterRecords = [];
     let resolved = 0;
     let students = 0;
     let faculty = 0;
-    let staffStats = {
-      "Person 1": { assigned: 0, resolved: 0 },
-      "Person 2": { assigned: 0, resolved: 0 },
-      "Person 3": { assigned: 0, resolved: 0 },
-      "Person 4": { assigned: 0, resolved: 0 },
-      "Person 5": { assigned: 0, resolved: 0 },
-      "No Staff Available": { assigned: 0, resolved: 0 }
-    };
+    let staffStats = {};
+    currentStaffList.forEach(name => { staffStats[name] = { assigned: 0, resolved: 0 }; });
+    staffStats["No Staff Available"] = { assigned: 0, resolved: 0 };
 
     let studentWords = {};
     let facultyWords = {};
@@ -209,6 +327,7 @@
 
     snapshot.forEach(doc => {
       const d = doc.data();
+      d.docId = doc.id;
       masterRecords.push(d);
 
       if (d.status === 'Resolved') resolved++;
@@ -221,13 +340,11 @@
         mineKeywords(d.query, studentWords, stopWords);
       }
 
-      // Staff metrics
-      const staffKey = d.assignedStaff || "No Staff Available";
-      if (!staffStats[staffKey]) staffStats[staffKey] = { assigned: 0, resolved: 0 };
-      staffStats[staffKey].assigned++;
-      if (d.status === 'Resolved') staffStats[staffKey].resolved++;
+      const s = d.assignedStaff || "No Staff Available";
+      if (!staffStats[s]) staffStats[s] = { assigned: 0, resolved: 0 };
+      staffStats[s].assigned++;
+      if (d.status === 'Resolved') staffStats[s].resolved++;
 
-      // Daily timeline
       const dateKey = d.createdDate ? d.createdDate.substring(0, 10) : new Date().toISOString().substring(0, 10);
       dailyTimeline[dateKey] = (dailyTimeline[dateKey] || 0) + 1;
     });
@@ -244,13 +361,143 @@
     renderKeywordStream('facultyKeywords', facultyWords, 'var(--crimson)');
   });
 
+  // 2. Settings: Staff List Listener
+  db.collection('settings').doc('staffList').onSnapshot(doc => {
+    currentStaffList = (doc.exists && doc.data().names) ? doc.data().names : ["Person 1", "Person 2", "Person 3", "Person 4", "Person 5"];
+    renderStaffChips();
+  });
+
+  function renderStaffChips() {
+    const c = document.getElementById('staffChipContainer');
+    c.innerHTML = '';
+    currentStaffList.forEach((name, idx) => {
+      c.innerHTML += `
+        <div class="staff-chip">
+          <b>${name}</b>
+          <span style="color:var(--crimson); cursor:pointer; font-weight:700; margin-left:8px;" onclick="removeStaff(${idx})">✕</span>
+        </div>
+      `;
+    });
+  }
+
+  function addNewStaff() {
+    const val = document.getElementById('newStaffInput').value.trim();
+    if (!val) return;
+    if (currentStaffList.includes(val)) return alert('Profile already exists.');
+    currentStaffList.push(val);
+    db.collection('settings').doc('staffList').set({ names: currentStaffList })
+      .then(() => {
+        document.getElementById('newStaffInput').value = '';
+      });
+  }
+
+  function removeStaff(idx) {
+    if (!confirm(`Remove "${currentStaffList[idx]}" from active profiles?`)) return;
+    currentStaffList.splice(idx, 1);
+    db.collection('settings').doc('staffList').set({ names: currentStaffList });
+  }
+
+  // 3. Settings: Notice Broadcast
+  db.collection('settings').doc('broadcast').onSnapshot(doc => {
+    if (doc.exists) {
+      document.getElementById('noticeTitleInput').value = doc.data().title || '';
+      document.getElementById('noticeBodyInput').value = doc.data().message || '';
+      document.getElementById('noticeActiveSelect').value = String(doc.data().active || false);
+    }
+  });
+
+  function saveBroadcastNotice() {
+    const title = document.getElementById('noticeTitleInput').value.trim();
+    const msg = document.getElementById('noticeBodyInput').value.trim();
+    const active = document.getElementById('noticeActiveSelect').value === 'true';
+
+    db.collection('settings').doc('broadcast').set({
+      title: title,
+      message: msg,
+      active: active,
+      updatedAt: new Date().toISOString()
+    }).then(() => alert('Notice board status updated.'));
+  }
+
+  // 4. In-Browser CSV to Directory Conversion (PapaParse)
+  function processStudentCSV() {
+    const file = document.getElementById('studentCSVInput').files[0];
+    if (!file) return alert('Select a student CSV file first.');
+    const status = document.getElementById('uploadStatusText');
+    status.innerText = "Parsing student spreadsheet...";
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: function(results) {
+        const studentMap = {};
+        results.data.forEach(row => {
+          const enr = (row.Enrolno || row.enrolno || row.Enrollment || row["Enrollment Number"] || "").toString().trim().toUpperCase();
+          const name = (row.Name || row.name || row["Student Name"] || "").toString().trim();
+          const sec = (row["Sem I - Section"] || row.Sec || row.Section || row.section || "").toString().trim();
+          const sem = (row.Semester || row.sem || "").toString().trim();
+          if (enr) {
+            studentMap[enr] = { name: name, sec: sec, sem: sem ? (sem + "th Sem") : "" };
+          }
+        });
+
+        db.collection('directory').doc('master').set({ students: studentMap }, { merge: true })
+          .then(() => {
+            status.innerText = `Successfully loaded and synced ${Object.keys(studentMap).length} students.`;
+            alert(`Student directory updated (${Object.keys(studentMap).length} records).`);
+          })
+          .catch(err => alert(err.message));
+      }
+    });
+  }
+
+  function processFacultyCSV() {
+    const file = document.getElementById('facultyCSVInput').files[0];
+    if (!file) return alert('Select a faculty CSV file first.');
+    const status = document.getElementById('uploadStatusText');
+    status.innerText = "Parsing faculty spreadsheet...";
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: function(results) {
+        const facList = [];
+        results.data.forEach(row => {
+          const n = (row["Faculty Name (Dr./Prof.)"] || row["Faculty Name"] || row.Name || row.name || "").toString().trim();
+          if (n && n !== "VF" && !facList.includes(n)) facList.push(n);
+        });
+
+        db.collection('directory').doc('master').set({ faculty: facList }, { merge: true })
+          .then(() => {
+            status.innerText = `Successfully loaded and synced ${facList.length} faculty profiles.`;
+            alert(`Faculty directory updated (${facList.length} records).`);
+          })
+          .catch(err => alert(err.message));
+      }
+    });
+  }
+
+  // 5. Database Purge Action
+  function clearTestEntries() {
+    if (!confirm("Delete all resolved queries? Pending queries will be retained.")) return;
+    const batch = db.batch();
+    let count = 0;
+    masterRecords.forEach(r => {
+      if (r.status === 'Resolved' && r.docId) {
+        batch.delete(db.collection('enquiries').doc(r.docId));
+        count++;
+      }
+    });
+    if (count === 0) return alert("No resolved queries found to purge.");
+    batch.commit().then(() => alert(`Purged ${count} resolved entries.`));
+  }
+
+  // 6. Visualizations & Helpers
   function mineKeywords(text, targetMap, stopWords) {
     if (!text) return;
     const tokens = text.toLowerCase().replace(/[^a-zA-Z ]/g, " ").split(/\s+/);
     tokens.forEach(w => {
-      if (w.length > 3 && !stopWords.includes(w)) {
-        targetMap[w] = (targetMap[w] || 0) + 1;
-      }
+      if (w.length > 3 && !stopWords.includes(w)) targetMap[w] = (targetMap[w] || 0) + 1;
     });
   }
 
@@ -259,7 +506,7 @@
     el.innerHTML = '';
     const sorted = Object.entries(wordMap).sort((a, b) => b[1] - a[1]).slice(0, 15);
     if (!sorted.length) {
-      el.innerHTML = '<span style="color:#94a3b8; font-size:13px;">No topic entries recorded yet.</span>';
+      el.innerHTML = '<span style="color:#94a3b8; font-size:13px;">No inquiries recorded yet.</span>';
       return;
     }
     sorted.forEach(([w, count]) => {
@@ -296,7 +543,7 @@
       data: {
         labels: dates.length ? dates : ['No Data'],
         datasets: [{
-          label: 'Inquiries',
+          label: 'Visits',
           data: counts.length ? counts : [0],
           borderColor: '#2563eb',
           backgroundColor: 'rgba(37, 99, 235, 0.08)',
@@ -322,10 +569,7 @@
   }
 
   function exportMasterCSV() {
-    if (!masterRecords.length) {
-      alert("No data available to export.");
-      return;
-    }
+    if (!masterRecords.length) return alert("No data available to export.");
     let csv = "Type,Name,Enrollment,Section,Semester,Assigned Staff,Query,Solution Remarks,Status,Created Date\n";
     masterRecords.forEach(r => {
       csv += `"${r.type || ''}","${r.name || ''}","${r.enrollment || ''}","${r.sec || ''}","${r.sem || ''}","${r.assignedStaff || ''}","${(r.query || '').replace(/"/g, '""')}","${(r.solution || '').replace(/"/g, '""')}","${r.status || ''}","${r.createdDate || ''}"\n`;
@@ -333,7 +577,7 @@
     const blob = new Blob([csv], { type: 'text/csv' });
     const link = document.createElement('a');
     link.href = window.URL.createObjectURL(blob);
-    link.download = `SSD_Audit_Report_${new Date().toISOString().substring(0, 10)}.csv`;
+    link.download = `SSD_Full_Audit_${new Date().toISOString().substring(0, 10)}.csv`;
     link.click();
   }
 </script>
