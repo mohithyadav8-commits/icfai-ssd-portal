@@ -124,6 +124,7 @@
       border: 1px solid rgba(220, 38, 38, 0.3);
     }
     .counter-badge { padding: 3px 9px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+    
     .ticket-row {
       background: var(--bg);
       border-radius: 16px;
@@ -131,6 +132,27 @@
       margin-bottom: 18px;
       box-shadow: 5px 5px 12px var(--dark-shadow), -5px -5px 12px var(--light-shadow);
       border-left: 5px solid var(--accent);
+    }
+    .token-chip {
+      background: #1e3a8a;
+      color: #ffffff;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+    }
+    .repeat-badge {
+      background: #fee2e2;
+      color: var(--crimson);
+      border: 1px solid #fca5a5;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
 
     #statusModal {
@@ -242,9 +264,7 @@
 <div id="statusModal">
   <div class="neu-card" style="max-width: 420px; width: 100%;">
     <h3 style="color:var(--primary); margin-top:0;">Desk Availability Settings</h3>
-    <p style="font-size:13px; color:var(--subtext); margin-bottom:15px;">
-      Set your current work status.
-    </p>
+    <p style="font-size:13px; color:var(--subtext); margin-bottom:15px;">Set your current work status.</p>
 
     <label style="font-size:13px; font-weight:600;">Current State:</label>
     <select id="modalStatusSelect" class="neu-inset" style="margin-top:8px;">
@@ -342,7 +362,6 @@
   }
 
   function listenToQueue() {
-    // Real-time stream across all active workstations
     db.collection('enquiries').onSnapshot(snapshot => {
       let stuHTML = '';
       let facHTML = '';
@@ -352,8 +371,6 @@
       snapshot.forEach(doc => {
         const d = doc.data();
         const id = doc.id;
-        
-        // Broadcasts to all staff if "No Staff Available", or shows if assigned to this staff member
         const isAssigned = (d.assignedStaff === activeStaff || d.assignedStaff === 'No Staff Available');
         const isOpen = (d.status === 'Open' || d.status === 'Open - Pending Action');
 
@@ -392,42 +409,60 @@
   function renderTicketCard(id, d, isFaculty) {
     const timeStr = d.createdDate ? new Date(d.createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently';
     const isBroadcast = d.assignedStaff === 'No Staff Available';
+    const token = d.tokenNumber || (isFaculty ? 'F-TK' : 'S-TK');
+
     return `
       <div class="ticket-row" style="border-left-color: ${isFaculty ? 'var(--crimson)' : 'var(--accent)'}">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
           <div>
-            <div style="display:flex; align-items:center; gap:8px;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <span class="token-chip">${token}</span>
               <div style="font-size:16px; font-weight:700; color:var(--text);">${d.name}</div>
               ${isBroadcast ? '<span style="font-size:10px; font-weight:700; background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:6px;">OFFICE BROADCAST</span>' : ''}
+              ${d.isRepeatVisitor ? `<span class="repeat-badge">⚠️ Repeat Visit (${d.priorVisitCount} recent visits)</span>` : ''}
             </div>
-            <div style="font-size:13px; color:var(--subtext); margin-top:2px;">
-              ${isFaculty ? 'Faculty Inquirer' : `${d.enrollment || 'N/A'} • Section ${d.sec || 'N/A'} • ${d.sem || 'N/A'}`}
+            <div style="font-size:13px; color:var(--subtext); margin-top:4px;">
+              ${isFaculty ? 'Faculty Member' : `${d.enrollment || 'N/A'} • Section ${d.sec || 'N/A'} • ${d.sem || 'N/A'}`}
             </div>
           </div>
           <span style="font-size:12px; font-weight:600; color:var(--subtext); background:#e2e8f0; padding:3px 9px; border-radius:8px;">${timeStr}</span>
         </div>
+
         <div style="background:#f1f5f9; padding:14px; border-radius:12px; margin:14px 0; font-size:14px; line-height:1.5; color:#334155;">
           ${d.query}
         </div>
+
         <textarea id="sol_${id}" class="neu-inset" rows="2" placeholder="Enter resolution notes..."></textarea>
+        
         <div style="margin-top:12px; display:flex; gap:12px;">
-          <button type="button" class="neu-btn" style="color:var(--green); flex:1;" onclick="resolveTicket('${id}')">Resolve & Close</button>
-          <button type="button" class="neu-btn" style="color:var(--crimson); flex:1;" onclick="keepPending('${id}')">Keep Open</button>
+          <button type="button" class="neu-btn" style="color:var(--green); flex:1;" onclick="resolveTicket('${id}', ${d.startTimestamp || 0})">
+            ✓ Resolve & Close
+          </button>
+          <button type="button" class="neu-btn" style="color:var(--crimson); flex:1;" onclick="keepPending('${id}')">
+            ⏳ Keep Open
+          </button>
         </div>
       </div>
     `;
   }
 
-  function resolveTicket(id) {
+  function resolveTicket(id, startTimestamp) {
     const sol = document.getElementById('sol_' + id).value.trim();
     if (!sol && !confirm("No remarks entered. Close ticket anyway?")) return;
     
-    // Updates database; real-time listener clears the ticket immediately from all other staff screens
+    const now = Date.now();
+    let handlingTimeMinutes = 0;
+    if (startTimestamp && startTimestamp > 0) {
+      handlingTimeMinutes = Math.max(1, Math.round((now - startTimestamp) / 60000));
+    }
+
     db.collection('enquiries').doc(id).update({
       status: 'Resolved',
       solution: sol || 'Resolved without remarks',
       resolvedBy: activeStaff,
-      resolvedDate: new Date().toISOString()
+      resolvedDate: new Date().toISOString(),
+      resolvedTimestamp: now,
+      handlingDurationMinutes: handlingTimeMinutes
     }).catch(err => alert(err.message));
   }
 
