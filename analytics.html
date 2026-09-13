@@ -2,104 +2,164 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>SSD Head - Analytics & Reports</title>
+  <title>SSD Executive Analytics & Intelligence</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Firebase & Chart.js -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
-      --bg: #e0e5ec;
-      --shadow-light: #ffffff;
-      --shadow-dark: #a3b1c6;
-      --primary: #1a365d;
+      --bg: #e2e8f0;
+      --light-shadow: #ffffff;
+      --dark-shadow: #b8c2d1;
+      --primary: #1e3a8a;
+      --accent: #2563eb;
+      --crimson: #dc2626;
+      --green: #16a34a;
     }
     body {
       background: var(--bg);
-      font-family: 'Segoe UI', Tahoma, sans-serif;
-      padding: 25px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       margin: 0;
+      padding: 30px 20px;
+      color: #1e293b;
     }
-    .card {
+    .neu-card {
       background: var(--bg);
-      border-radius: 16px;
-      padding: 22px;
-      box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
-      margin-bottom: 20px;
-    }
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-    .stat-val {
-      font-size: 30px;
-      font-weight: bold;
-      color: var(--primary);
-      margin-top: 8px;
+      border-radius: 20px;
+      box-shadow: 8px 8px 18px var(--dark-shadow), -8px -8px 18px var(--light-shadow);
+      padding: 24px;
+      margin-bottom: 25px;
+      transition: all 0.3s ease;
     }
     .neu-btn {
       border: none;
-      padding: 12px 20px;
-      border-radius: 10px;
-      cursor: pointer;
+      border-radius: 12px;
+      padding: 12px 22px;
       background: var(--bg);
+      box-shadow: 5px 5px 10px var(--dark-shadow), -5px -5px 10px var(--light-shadow);
+      cursor: pointer;
       font-weight: 600;
       color: var(--primary);
-      box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
-      transition: 0.2s ease;
+      transition: all 0.15s ease;
+    }
+    .neu-btn:hover {
+      box-shadow: 7px 7px 14px var(--dark-shadow), -7px -7px 14px var(--light-shadow);
     }
     .neu-btn:active {
-      box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
+      box-shadow: inset 3px 3px 6px var(--dark-shadow), inset -3px -3px 6px var(--light-shadow);
+    }
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 18px;
+      margin-bottom: 25px;
+    }
+    .stat-val {
+      font-size: 32px;
+      font-weight: 800;
+      margin-top: 6px;
+    }
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 25px;
+    }
+    @media (max-width: 900px) {
+      .charts-grid { grid-template-columns: 1fr; }
     }
     .tag {
-      background: #d9e0ea;
-      padding: 7px 14px;
-      border-radius: 20px;
+      background: var(--bg);
+      padding: 8px 16px;
+      border-radius: 16px;
       font-size: 13px;
-      box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light);
+      box-shadow: inset 3px 3px 6px var(--dark-shadow), inset -3px -3px 6px var(--light-shadow);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
   </style>
 </head>
 <body>
 
-<div style="max-width: 1000px; margin: auto;">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
+<div style="max-width: 1280px; margin: auto;">
+  
+  <!-- Header Bar -->
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px; flex-wrap:wrap; gap:15px;">
     <div>
-      <h2 style="color:var(--primary); margin:0;">SSD Master Analytics Dashboard</h2>
-      <p style="color:#666; font-size:13px; margin:4px 0 0 0;">Real-time intelligence on student and faculty queries</p>
+      <h2 style="color:var(--primary); margin:0;">SSD Intelligence & Operational Analytics</h2>
+      <p style="color:#64748b; font-size:13px; margin:4px 0 0 0;">Department performance, visitor trends, and inquiry topic analysis</p>
     </div>
-    <button class="neu-btn" type="button" onclick="exportWeeklyCSV()">Download Report (CSV)</button>
+    <button class="neu-btn" type="button" onclick="exportMasterCSV()">
+      ⬇ Download Master Audit Report (CSV)
+    </button>
   </div>
 
-  <div class="metrics">
-    <div class="card">
-      <span style="font-size:13px; font-weight:600; color:#555;">TOTAL ENQUIRIES</span>
-      <div class="stat-val" id="totalCount">0</div>
+  <!-- KPI Cards Row -->
+  <div class="kpi-row">
+    <div class="neu-card" style="margin-bottom:0;">
+      <span style="font-size:12px; font-weight:700; color:#64748b;">TOTAL ENQUIRIES</span>
+      <div class="stat-val" id="kpiTotal" style="color:var(--primary);">0</div>
     </div>
-    <div class="card">
-      <span style="font-size:13px; font-weight:600; color:#555;">RESOLVED</span>
-      <div class="stat-val" id="resolvedCount" style="color:green;">0</div>
+    <div class="neu-card" style="margin-bottom:0;">
+      <span style="font-size:12px; font-weight:700; color:#64748b;">RESOLVED</span>
+      <div class="stat-val" id="kpiResolved" style="color:var(--green);">0</div>
     </div>
-    <div class="card">
-      <span style="font-size:13px; font-weight:600; color:#555;">PENDING / OPEN</span>
-      <div class="stat-val" id="pendingCount" style="color:#c53030;">0</div>
+    <div class="neu-card" style="margin-bottom:0;">
+      <span style="font-size:12px; font-weight:700; color:#64748b;">PENDING / ESCALATED</span>
+      <div class="stat-val" id="kpiPending" style="color:var(--crimson);">0</div>
     </div>
-    <div class="card">
-      <span style="font-size:13px; font-weight:600; color:#555;">EFFICIENCY RATE</span>
-      <div class="stat-val" id="effRate">0%</div>
+    <div class="neu-card" style="margin-bottom:0;">
+      <span style="font-size:12px; font-weight:700; color:#64748b;">RESOLUTION EFFICIENCY</span>
+      <div class="stat-val" id="kpiEff" style="color:var(--accent);">0%</div>
     </div>
   </div>
 
-  <div class="card">
-    <h3 style="color:var(--primary); margin-top:0;">Recurring Issue Keywords (Text Analysis)</h3>
-    <p style="font-size:13px; color:#666; margin-bottom:15px;">
-      Automatically extracted recurring patterns from visits:
+  <!-- Interactive Charts Grid -->
+  <div class="charts-grid" style="margin-bottom: 25px;">
+    <!-- Daily Volume Timeline -->
+    <div class="neu-card">
+      <h3 style="color:var(--primary); margin-top:0;">Daily Visitor Volume</h3>
+      <canvas id="timelineChart" height="120"></canvas>
+    </div>
+    <!-- Visitor Demographics Doughnut -->
+    <div class="neu-card">
+      <h3 style="color:var(--primary); margin-top:0;">Visitor Ratio</h3>
+      <canvas id="demographicsChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Staff Resolution Performance -->
+  <div class="neu-card">
+    <h3 style="color:var(--primary); margin-top:0;">Staff Resolution & Allocation Metrics</h3>
+    <div id="staffMetricsTable" style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; font-size:14px; text-align:left;">
+        <thead>
+          <tr style="border-bottom: 2px solid #cbd5e1; color:#64748b;">
+            <th style="padding:10px;">Staff Identity</th>
+            <th style="padding:10px;">Assigned</th>
+            <th style="padding:10px;">Resolved</th>
+            <th style="padding:10px;">Pending</th>
+            <th style="padding:10px;">Success Rate</th>
+          </tr>
+        </thead>
+        <tbody id="staffTableBody">
+          <tr><td colspan="5" style="padding:15px; text-align:center; color:#94a3b8;">Loading desk figures...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Text Analysis Keyword Cloud -->
+  <div class="neu-card">
+    <h3 style="color:var(--primary); margin-top:0;">Frequent Issue Topics (Text Mining)</h3>
+    <p style="font-size:13px; color:#64748b; margin-bottom:15px;">
+      Common keywords extracted from enquiry statements to identify recurring student friction points:
     </p>
-    <div id="keywordCloud" style="display:flex; flex-wrap:wrap; gap:10px;">
-      <span style="color:#777; font-size:13px;">No enquiry text data collected yet.</span>
-    </div>
+    <div id="keywordCloud" style="display:flex; flex-wrap:wrap; gap:10px;"></div>
   </div>
+
 </div>
 
 <script>
@@ -114,74 +174,155 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  let allRecords = [];
+  let masterRecords = [];
+  let timelineChartInstance = null;
+  let demographicsChartInstance = null;
 
-  db.collection('enquiries').onSnapshot(function(snapshot) {
-    allRecords = [];
+  db.collection('enquiries').onSnapshot(snapshot => {
+    masterRecords = [];
     let resolved = 0;
     let pending = 0;
-    let stopWords = ["this", "that", "have", "from", "with", "what", "some", "please", "regarding", "about", "want", "need", "issue", "sir", "madam", "help", "there"];
-    let wordCounts = {};
+    let students = 0;
+    let faculty = 0;
+    let staffStats = {
+      "Person 1": { assigned: 0, resolved: 0 },
+      "Person 2": { assigned: 0, resolved: 0 },
+      "Person 3": { assigned: 0, resolved: 0 },
+      "Person 4": { assigned: 0, resolved: 0 },
+      "Person 5": { assigned: 0, resolved: 0 },
+      "No Staff Available": { assigned: 0, resolved: 0 }
+    };
 
-    snapshot.forEach(function(doc) {
+    let wordFrequencies = {};
+    let dailyTrends = {};
+    const stopWords = ["this", "that", "have", "from", "with", "what", "some", "please", "regarding", "about", "want", "need", "issue", "help", "detail", "details", "there", "query"];
+
+    snapshot.forEach(doc => {
       const d = doc.data();
-      allRecords.push(d);
+      masterRecords.push(d);
 
-      if (d.status === 'Resolved') {
-        resolved++;
-      } else {
-        pending++;
-      }
+      // Core counters
+      if (d.status === 'Resolved') resolved++;
+      else pending++;
 
+      if (d.type === 'Faculty') faculty++;
+      else students++;
+
+      // Staff metrics
+      const staffKey = d.assignedStaff || "No Staff Available";
+      if (!staffStats[staffKey]) staffStats[staffKey] = { assigned: 0, resolved: 0 };
+      staffStats[staffKey].assigned++;
+      if (d.status === 'Resolved') staffStats[staffKey].resolved++;
+
+      // Date trend
+      const dateKey = d.createdDate ? d.createdDate.substring(0, 10) : new Date().toISOString().substring(0, 10);
+      dailyTrends[dateKey] = (dailyTrends[dateKey] || 0) + 1;
+
+      // Text mining
       if (d.query) {
-        const cleanWords = d.query.toLowerCase().replace(/[^a-zA-Z ]/g, " ").split(/\s+/);
-        cleanWords.forEach(function(w) {
+        const tokens = d.query.toLowerCase().replace(/[^a-zA-Z ]/g, " ").split(/\s+/);
+        tokens.forEach(w => {
           if (w.length > 3 && !stopWords.includes(w)) {
-            wordCounts[w] = (wordCounts[w] || 0) + 1;
+            wordFrequencies[w] = (wordFrequencies[w] || 0) + 1;
           }
         });
       }
     });
 
-    document.getElementById('totalCount').innerText = allRecords.length;
-    document.getElementById('resolvedCount').innerText = resolved;
-    document.getElementById('pendingCount').innerText = pending;
-    
-    if (allRecords.length > 0) {
-      document.getElementById('effRate').innerText = Math.round((resolved / allRecords.length) * 100) + "%";
-    } else {
-      document.getElementById('effRate').innerText = "0%";
-    }
+    // Update KPIs
+    const total = masterRecords.length;
+    document.getElementById('kpiTotal').innerText = total;
+    document.getElementById('kpiResolved').innerText = resolved;
+    document.getElementById('kpiPending').innerText = pending;
+    document.getElementById('kpiEff').innerText = total ? Math.round((resolved / total) * 100) + '%' : '0%';
 
-    const cloud = document.getElementById('keywordCloud');
-    cloud.innerHTML = '';
-    const sorted = Object.entries(wordCounts).sort((a, b) => b[1] - a[1]).slice(0, 20);
-
-    if (sorted.length === 0) {
-      cloud.innerHTML = '<span style="color:#777; font-size:13px;">No keyword patterns identified yet.</span>';
-    } else {
-      sorted.forEach(function([word, count]) {
-        cloud.innerHTML += `<span class="tag"><b>${word}</b> &nbsp;<span style="color:#2b6cb0;">${count}</span></span>`;
-      });
-    }
-  }, function(error) {
-    console.error("Analytics listener error:", error);
+    renderStaffTable(staffStats);
+    renderCharts(dailyTrends, students, faculty);
+    renderKeywords(wordFrequencies);
   });
 
-  function exportWeeklyCSV() {
-    if (allRecords.length === 0) {
-      alert("No records to export yet.");
-      return;
-    }
-    let csv = "Type,Name,Enrollment,Section,Semester,Assigned Staff,Query,Solution Remarks,Status,Date\n";
-    allRecords.forEach(function(r) {
-      csv += `"${r.type || ''}","${r.name || ''}","${r.enrollment || ''}","${r.sec || ''}","${r.sem || ''}","${r.assignedStaff || ''}","${(r.query || '').replace(/"/g, '""')}","${(r.solution || '').replace(/"/g, '""')}","${r.status || ''}","${r.createdDate || ''}"\n`;
+  function renderStaffTable(stats) {
+    const tbody = document.getElementById('staffTableBody');
+    tbody.innerHTML = '';
+    Object.keys(stats).forEach(staff => {
+      const s = stats[staff];
+      const pending = s.assigned - s.resolved;
+      const rate = s.assigned ? Math.round((s.resolved / s.assigned) * 100) + '%' : 'N/A';
+      tbody.innerHTML += `
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding:10px; font-weight:600;">${staff}</td>
+          <td style="padding:10px;">${s.assigned}</td>
+          <td style="padding:10px; color:var(--green); font-weight:600;">${s.resolved}</td>
+          <td style="padding:10px; color:var(--crimson); font-weight:600;">${pending}</td>
+          <td style="padding:10px;">${rate}</td>
+        </tr>
+      `;
+    });
+  }
+
+  function renderCharts(trends, studentCount, facultyCount) {
+    // 1. Timeline Chart
+    const dates = Object.keys(trends).sort();
+    const counts = dates.map(d => trends[d]);
+
+    if (timelineChartInstance) timelineChartInstance.destroy();
+    timelineChartInstance = new Chart(document.getElementById('timelineChart'), {
+      type: 'line',
+      data: {
+        labels: dates.length ? dates : ['No Records'],
+        datasets: [{
+          label: 'Total Visits',
+          data: counts.length ? counts : [0],
+          borderColor: '#2563eb',
+          backgroundColor: 'rgba(37, 99, 235, 0.1)',
+          fill: true,
+          tension: 0.35
+        }]
+      },
+      options: { responsive: true, plugins: { legend: { display: false } } }
     });
 
+    // 2. Demographics Chart
+    if (demographicsChartInstance) demographicsChartInstance.destroy();
+    demographicsChartInstance = new Chart(document.getElementById('demographicsChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Students', 'Faculty'],
+        datasets: [{
+          data: [studentCount, facultyCount],
+          backgroundColor: ['#2563eb', '#dc2626']
+        }]
+      },
+      options: { responsive: true }
+    });
+  }
+
+  function renderKeywords(words) {
+    const container = document.getElementById('keywordCloud');
+    container.innerHTML = '';
+    const sorted = Object.entries(words).sort((a, b) => b[1] - a[1]).slice(0, 20);
+    if (!sorted.length) {
+      container.innerHTML = '<span style="color:#94a3b8; font-size:13px;">No keyword patterns identified yet.</span>';
+      return;
+    }
+    sorted.forEach(([w, count]) => {
+      container.innerHTML += `<span class="tag"><b>${w}</b> <span style="color:var(--accent); font-weight:700;">${count}</span></span>`;
+    });
+  }
+
+  function exportMasterCSV() {
+    if (!masterRecords.length) {
+      alert("No data to export.");
+      return;
+    }
+    let csv = "Type,Name,Enrollment,Section,Semester,Assigned Staff,Query,Solution Remarks,Status,Created Date\n";
+    masterRecords.forEach(r => {
+      csv += `"${r.type || ''}","${r.name || ''}","${r.enrollment || ''}","${r.sec || ''}","${r.sem || ''}","${r.assignedStaff || ''}","${(r.query || '').replace(/"/g, '""')}","${(r.solution || '').replace(/"/g, '""')}","${r.status || ''}","${r.createdDate || ''}"\n`;
+    });
     const blob = new Blob([csv], { type: 'text/csv' });
     const link = document.createElement('a');
     link.href = window.URL.createObjectURL(blob);
-    link.download = `SSD_Master_Report_${new Date().toISOString().slice(0,10)}.csv`;
+    link.download = `SSD_Executive_Audit_${new Date().toISOString().substring(0, 10)}.csv`;
     link.click();
   }
 </script>
